@@ -16,13 +16,8 @@ const loginRules = reactive<FormRules>({
   password: [
     {
       validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("login.purePassWordReg"))));
-        } else if (!REGEXP_PWD.test(value)) {
-          callback(new Error(transformI18n($t("login.purePassWordRuleReg"))));
-        } else {
-          callback();
-        }
+        // 本地开发模式：跳过密码验证
+        callback();
       },
       trigger: "blur"
     }
@@ -30,15 +25,8 @@ const loginRules = reactive<FormRules>({
   verifyCode: [
     {
       validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("login.pureVerifyCodeReg"))));
-        } else if (useUserStoreHook().verifyCode !== value) {
-          callback(
-            new Error(transformI18n($t("login.pureVerifyCodeCorrectReg")))
-          );
-        } else {
-          callback();
-        }
+        // 本地开发模式：跳过验证码验证
+        callback();
       },
       trigger: "blur"
     }

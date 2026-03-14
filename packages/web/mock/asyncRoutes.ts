@@ -1,6 +1,12 @@
 // 模拟后端动态生成路由
 import { defineFakeRoute } from "vite-plugin-fake-server/client";
-import { system, monitor, permission, frame, tabs } from "@/router/enums";
+
+// Inline enums to avoid import issues in mock folder
+const system = 12,
+  monitor = 13,
+  permission = 14,
+  frame = 15,
+  tabs = 16;
 
 /**
  * roles：页面级别权限，这里模拟二种 "admin"、"common"
