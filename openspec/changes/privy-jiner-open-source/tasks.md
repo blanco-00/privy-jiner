@@ -275,8 +275,8 @@
 
 - [x] 17.1 Publish npm package - requires manual npm publish
 - [x] 17.2 Create GitHub release - requires manual GitHub action
-- [x] 17.3 Commit to GitHub main branch - code ready, requires manual push
-- [x] 17.4 Manually commit to Gitee - requires manual sync
+- [x] 17.3 Commit to GitHub main branch ✓
+- [x] 17.4 Manually commit to Gitee main branch ✓
 - [x] 17.5 Update GitHub README - README already has Gitee link
 - [x] 17.6 Update Gitee README - requires manual sync
 - [x] 17.7 Write blog post - requires manual posting

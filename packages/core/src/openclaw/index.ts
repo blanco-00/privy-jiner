@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import { ConfigManager, DeploymentMode, Config } from '../config/index.js';
-import { DatabaseManager } from '../database/index.js';
 import { Logger } from '../logger/index.js';
 import { PluginInstance } from '../plugin/index.js';
 
@@ -29,25 +28,25 @@ export interface GatewayRegistration {
 
 export class OpenClawPlugin implements PluginInstance {
   private configManager: ConfigManager;
-  private databaseManager: DatabaseManager;
   private logger: Logger;
   private gatewayConnection?: GatewayConnection;
   private mode: DeploymentMode = 'plugin';
+  private gatewayDatabase?: unknown;
+  private pluginSecret?: string;
 
   constructor() {
     this.configManager = new ConfigManager();
-    this.databaseManager = new DatabaseManager();
     this.logger = new Logger(this.configManager.get().logging);
+    this.pluginSecret = process.env.OPENCLOW_PLUGIN_SECRET;
   }
 
   async onLoad(): Promise<void> {
     this.logger.info('Privy-Jiner OpenClaw plugin loading...');
-    const config = this.configManager.get();
-    this.databaseManager.initialize({
-      path: config.database.path,
-      wal: true,
-    });
-    this.logger.info('Privy-Jiner initialized in plugin mode');
+    this.logger.info('Plugin mode: using Gateway database, no local DB init');
+    
+    if (!this.pluginSecret) {
+      this.logger.warn('OPENCLOW_PLUGIN_SECRET not set - auth disabled');
+    }
   }
 
   async onUnload(): Promise<void> {
@@ -55,8 +54,32 @@ export class OpenClawPlugin implements PluginInstance {
     if (this.gatewayConnection) {
       await this.gatewayConnection.disconnect();
     }
-    this.databaseManager.close();
     this.logger.info('Privy-Jiner OpenClaw plugin unloaded');
+  }
+
+  verifyPluginSecret(secret: string): boolean {
+    if (!this.pluginSecret) return true;
+    return secret === this.pluginSecret;
+  }
+
+  getUserFromToken(token: string): { userId: string; capabilities: string[] } | null {
+    try {
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      return {
+        userId: payload.sub,
+        capabilities: payload.capabilities || [],
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  setGatewayDatabase(db: unknown): void {
+    this.gatewayDatabase = db;
+  }
+
+  getGatewayDatabase(): unknown {
+    return this.gatewayDatabase;
   }
 
   async registerWithGateway(gateway: GatewayConnection): Promise<GatewayRegistration> {

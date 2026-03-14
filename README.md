@@ -1,4 +1,4 @@
-# Privy-Jiner 瑾儿私人管家
+# Privy-Jiner jinner私人管家
 
 Personal AI Assistant - Open Source Edition
 
@@ -64,7 +64,7 @@ MIT License - see [LICENSE](./LICENSE)
 
 ### 简介
 
-瑾儿私人管家是一个开源的个人 AI 助手系统，专为个人使用场景设计。支持独立部署和 OpenClaw 插件模式，提供财务管理、健康追踪、时尚推荐、知识推送和新闻聚合等功能。
+jinner私人管家是一个开源的个人 AI 助手系统，专为个人使用场景设计。支持独立部署和 OpenClaw 插件模式，提供财务管理、健康追踪、时尚推荐、知识推送和新闻聚合等功能。
 
 ### 功能特性
 
@@ -84,8 +84,8 @@ MIT License - see [LICENSE](./LICENSE)
 
 ```bash
 # 克隆仓库
-git clone https://github.com/blanco-00/privy-jiner.git
-cd privy-jiner
+git clone https://github.com/blanco-00/jinner.git
+cd jinner
 
 # 安装依赖
 npm install

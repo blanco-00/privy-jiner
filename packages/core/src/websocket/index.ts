@@ -20,7 +20,7 @@ export class WSServer extends EventEmitter {
   private port: number;
   private host: string;
 
-  constructor(port = 3001, host = '0.0.0.0') {
+  constructor(port = 3002, host = '0.0.0.0') {
     super();
     this.port = port;
     this.host = host;

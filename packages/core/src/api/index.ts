@@ -77,7 +77,7 @@ export class APIServer extends EventEmitter {
     if (this.server) return;
 
     const config = this.configManager.get();
-    const port = config.deployment.port || 3000;
+    const port = config.deployment.port || 3001;
     const host = config.deployment.host || '0.0.0.0';
 
     this.server = this.app.listen(port, host, () => {

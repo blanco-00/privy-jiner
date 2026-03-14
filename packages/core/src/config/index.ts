@@ -51,6 +51,10 @@ export interface Config {
     defaultLocale: string;
     fallbackLocale: string;
   };
+  auth?: {
+    requireLogin: boolean;
+    sessionTimeout: number;
+  };
   dataDirectory: string;
 }
 
@@ -168,7 +172,7 @@ export class ConfigManager {
     const defaultConfig: Config = {
       deployment: {
         mode: 'standalone',
-        port: 3000,
+        port: 3001,
         host: '0.0.0.0',
       },
       database: {

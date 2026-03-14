@@ -21,6 +21,10 @@
     "mode": "shared",
     "path": "data/privy-jiner.db"
   },
+  "auth": {
+    "type": "shared-secret",
+    "secret_env": "OPENCLOW_PLUGIN_SECRET"
+  },
   "openclaw": {
     "type": "personal-assistant",
     "gatewayVersion": ">=1.0.0"
