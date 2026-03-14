@@ -1,6 +1,6 @@
 <template>
   <div class="tasks-page">
-    <h1>{{ t('tasks.title') }}</h1>
+    <PageHeader :title="t('tasks.title')" />
 
     <div class="stats-row">
       <div class="stat-card">
@@ -42,25 +42,33 @@
       <button @click="showAddModal = true" class="btn-primary">{{ t('tasks.addTask') }}</button>
     </div>
 
-    <div class="task-list">
-      <div v-for="task in tasks" :key="task.id" class="task-item" :class="{ completed: task.status === 'completed', overdue: isOverdue(task) }">
-        <div class="task-check">
-          <input type="checkbox" :checked="task.status === 'completed'" @change="toggleComplete(task)" />
-        </div>
-        <div class="task-content">
-          <span class="task-title">{{ task.title }}</span>
-          <span class="task-meta">
-            <span class="priority-badge" :class="task.priority">{{ t('tasks.' + task.priority) }}</span>
-            <span v-if="task.due_date" class="due-date">{{ task.due_date }}</span>
-          </span>
-        </div>
-        <div class="task-actions">
-          <button @click="editTask(task)" class="btn-small">✏️</button>
-          <button @click="deleteTask(task.id)" class="btn-delete">✕</button>
+    <Card variant="content" class="task-list-card">
+      <div v-if="tasks.length > 0" class="task-list">
+        <div v-for="task in tasks" :key="task.id" class="task-item" :class="{ completed: task.status === 'completed', overdue: isOverdue(task) }">
+          <div class="task-check">
+            <input type="checkbox" :checked="task.status === 'completed'" @change="toggleComplete(task)" />
+          </div>
+          <div class="task-content">
+            <span class="task-title">{{ task.title }}</span>
+            <span class="task-meta">
+              <span class="priority-badge" :class="task.priority">{{ t('tasks.' + task.priority) }}</span>
+              <span v-if="task.due_date" class="due-date">{{ task.due_date }}</span>
+            </span>
+          </div>
+          <div class="task-actions">
+            <button @click="editTask(task)" class="btn-small">✏️</button>
+            <button @click="deleteTask(task.id)" class="btn-delete">✕</button>
+          </div>
         </div>
       </div>
-      <div v-if="tasks.length === 0" class="empty">{{ t('tasks.noTasks') }}</div>
-    </div>
+      <EmptyState
+        v-else
+        icon="📋"
+        :title="t('tasks.noTasks')"
+        :action-label="t('tasks.addTask')"
+        @action="showAddModal = true"
+      />
+    </Card>
 
     <div v-if="showAddModal" class="modal" @click.self="showAddModal = false">
       <div class="modal-content">
@@ -90,6 +98,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useI18n } from '../composables/useI18n';
+import PageHeader from '../components/PageHeader.vue';
+import Card from '../components/Card.vue';
+import EmptyState from '../components/EmptyState.vue';
 
 const { t, initLocale } = useI18n();
 
@@ -199,15 +210,13 @@ async function deleteTask(id: string) {
 
 <style scoped>
 .tasks-page {
-  padding: 32px;
+  padding: var(--space-lg);
   max-width: 900px;
   margin: 0 auto;
 }
 
-h1 {
-  margin: 0 0 24px;
-  font-size: 28px;
-  color: #f5f5f5;
+.task-list-card {
+  margin-bottom: var(--space-lg);
 }
 
 .stats-row {
@@ -270,7 +279,7 @@ h1 {
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .task-item {
@@ -412,11 +421,5 @@ h1 {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-}
-
-.empty {
-  text-align: center;
-  padding: 48px;
-  color: #666;
 }
 </style>

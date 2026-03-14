@@ -1,14 +1,16 @@
 <template>
   <div class="contacts-page">
-    <h1>{{ t('contacts.title') }}</h1>
+    <PageHeader :title="t('contacts.title')" />
 
     <div class="toolbar">
       <input v-model="search" type="text" :placeholder="t('contacts.search')" class="search-input" @input="loadContacts" />
       <button @click="showAddModal = true" class="btn-primary">{{ t('contacts.addContact') }}</button>
     </div>
 
-    <div class="card" v-if="upcomingBirthdays.length > 0">
-      <h2>{{ t('contacts.upcomingBirthdays') }}</h2>
+    <Card variant="content" v-if="upcomingBirthdays.length > 0" class="birthday-card">
+      <template #header>
+        <h2>{{ t('contacts.upcomingBirthdays') }}</h2>
+      </template>
       <div class="birthday-list">
         <div v-for="c in upcomingBirthdays" :key="c.id" class="birthday-item">
           <span class="bday-icon">🎂</span>
@@ -16,10 +18,10 @@
           <span class="bday-date">{{ c.birthday }}</span>
         </div>
       </div>
-    </div>
+    </Card>
 
-    <div class="card">
-      <div class="contact-list">
+    <Card variant="content" class="contacts-card">
+      <div v-if="contacts.length > 0" class="contact-list">
         <div v-for="contact in contacts" :key="contact.id" class="contact-item">
           <div class="contact-info">
             <span class="contact-name">{{ contact.name }}</span>
@@ -30,9 +32,15 @@
             <button @click="deleteContact(contact.id)" class="btn-delete">✕</button>
           </div>
         </div>
-        <div v-if="contacts.length === 0" class="empty">{{ t('contacts.noContacts') }}</div>
       </div>
-    </div>
+      <EmptyState
+        v-else
+        icon="👥"
+        :title="t('contacts.noContacts')"
+        :action-label="t('contacts.addContact')"
+        @action="showAddModal = true"
+      />
+    </Card>
 
     <div v-if="showAddModal" class="modal" @click.self="showAddModal = false">
       <div class="modal-content">
@@ -57,6 +65,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useI18n } from '../composables/useI18n';
+import PageHeader from '../components/PageHeader.vue';
+import Card from '../components/Card.vue';
+import EmptyState from '../components/EmptyState.vue';
 
 const { t, initLocale } = useI18n();
 
@@ -146,21 +157,20 @@ async function deleteContact(id: string) {
 
 <style scoped>
 .contacts-page {
-  padding: 32px;
+  padding: var(--space-lg);
   max-width: 800px;
   margin: 0 auto;
 }
 
-h1 {
-  margin: 0 0 24px;
-  font-size: 28px;
-  color: #f5f5f5;
+.birthday-card {
+  margin-bottom: var(--space-lg);
 }
 
-h2, h3 {
-  margin: 0 0 16px;
-  font-size: 18px;
-  color: #888;
+.birthday-card h2 {
+  margin: 0;
+  font-size: var(--font-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
 }
 
 .toolbar {
@@ -173,44 +183,36 @@ h2, h3 {
   flex: 1;
   padding: 12px;
   font-size: 14px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #f5f5f5;
-}
-
-.card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
 }
 
 .contact-list, .birthday-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .contact-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  background: #242424;
-  border-radius: 8px;
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
 }
 
 .contact-name {
-  color: #f5f5f5;
-  font-weight: 500;
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
 }
 
 .contact-details {
-  color: #888;
-  font-size: 13px;
-  margin-left: 8px;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  margin-left: var(--space-sm);
 }
 
 .contact-actions {
@@ -220,42 +222,42 @@ h2, h3 {
 
 .btn-small, .btn-delete {
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   background: transparent;
-  border: 1px solid #333;
-  border-radius: 6px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .btn-delete {
-  color: #e85454;
-  border-color: #e85454;
+  color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .btn-primary {
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  background: #e8a854;
-  color: #0f0f0f;
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+  background: var(--accent-primary);
+  color: var(--bg-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
 .birthday-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #242424;
-  border-radius: 8px;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
 }
 
-.bday-icon { font-size: 18px; }
-.bday-name { color: #f5f5f5; }
-.bday-date { color: #888; margin-left: auto; }
+.bday-icon { font-size: var(--font-lg); }
+.bday-name { color: var(--text-primary); }
+.bday-date { color: var(--text-secondary); margin-left: auto; }
 
 .modal {
   position: fixed;
@@ -270,49 +272,49 @@ h2, h3 {
 }
 
 .modal-content {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
   width: 400px;
   max-width: 90%;
+}
+
+.modal-content h3 {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-lg);
+  color: var(--text-primary);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .form input, .form textarea {
-  padding: 12px;
-  font-size: 14px;
-  background: #242424;
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #f5f5f5;
+  padding: var(--space-md);
+  font-size: var(--font-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
 }
 
 .modal-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 12px;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
 }
 
 .btn-cancel {
   flex: 1;
-  padding: 12px;
-  font-size: 14px;
-  background: #333;
-  color: #f5f5f5;
+  padding: var(--space-md);
+  font-size: var(--font-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-}
-
-.empty {
-  text-align: center;
-  padding: 32px;
-  color: #666;
 }
 </style>

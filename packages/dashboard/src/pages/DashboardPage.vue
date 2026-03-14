@@ -1,29 +1,31 @@
 <template>
   <div class="dashboard-page">
-    <h1>{{ t('dashboard.title') }}</h1>
-    <p class="subtitle">{{ t('dashboard.subtitle') }}</p>
+    <PageHeader
+      :title="t('dashboard.title')"
+      :subtitle="t('dashboard.subtitle')"
+    />
     
     <div class="stats">
-      <div class="stat-card">
-        <div class="stat-icon">💰</div>
-        <div class="stat-value">$0</div>
-        <div class="stat-label">{{ t('dashboard.financeBalance') }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">💧</div>
-        <div class="stat-value">0</div>
-        <div class="stat-label">{{ t('dashboard.water') }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">👟</div>
-        <div class="stat-value">0</div>
-        <div class="stat-label">{{ t('dashboard.steps') }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">👔</div>
-        <div class="stat-value">0</div>
-        <div class="stat-label">{{ t('dashboard.clothes') }}</div>
-      </div>
+      <StatCard
+        :label="t('dashboard.financeBalance')"
+        value="$0"
+        icon="💰"
+      />
+      <StatCard
+        :label="t('dashboard.water')"
+        value="0"
+        icon="💧"
+      />
+      <StatCard
+        :label="t('dashboard.steps')"
+        value="0"
+        icon="👟"
+      />
+      <StatCard
+        :label="t('dashboard.clothes')"
+        value="0"
+        icon="👔"
+      />
     </div>
 
     <div class="section">
@@ -51,28 +53,28 @@
     <div class="section">
       <h2>{{ t('dashboard.gettingStarted') }}</h2>
       <div class="guide-cards">
-        <div class="guide-card">
+        <Card variant="content">
           <h3>{{ t('dashboard.guide1Title') }}</h3>
           <p>{{ t('dashboard.guide1Desc') }}</p>
-        </div>
-        <div class="guide-card">
+        </Card>
+        <Card variant="content">
           <h3>{{ t('dashboard.guide2Title') }}</h3>
           <p>{{ t('dashboard.guide2Desc') }}</p>
-        </div>
-        <div class="guide-card">
+        </Card>
+        <Card variant="content">
           <h3>{{ t('dashboard.guide3Title') }}</h3>
           <p>{{ t('dashboard.guide3Desc') }}</p>
-        </div>
-        <div class="guide-card">
+        </Card>
+        <Card variant="content">
           <h3>{{ t('dashboard.guide4Title') }}</h3>
           <p>{{ t('dashboard.guide4Desc') }}</p>
-        </div>
+        </Card>
       </div>
     </div>
 
     <div class="section">
       <h2>System Status</h2>
-      <div class="status-card">
+      <Card variant="content">
         <div class="status-item">
           <span class="status-label">Database</span>
           <span class="status-value success">Connected (SQLite)</span>
@@ -85,7 +87,7 @@
           <span class="status-label">Version</span>
           <span class="status-value">v0.1.0</span>
         </div>
-      </div>
+      </Card>
     </div>
   </div>
 </template>
@@ -93,6 +95,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from '../composables/useI18n';
+import PageHeader from '../components/PageHeader.vue';
+import Card from '../components/Card.vue';
+import StatCard from '../components/StatCard.vue';
 
 const { t, initLocale } = useI18n();
 
@@ -127,17 +132,6 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
-h1 {
-  margin: 0 0 var(--space-2);
-  font-size: var(--font-2xl);
-  color: var(--text-primary);
-}
-
-.subtitle {
-  margin: 0 0 var(--space-8);
-  color: var(--text-secondary);
-}
-
 h2 {
   margin: 0 0 var(--space-4);
   font-size: var(--font-lg);
@@ -149,38 +143,6 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-10);
-}
-
-.stat-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  text-align: center;
-  transition: all var(--transition-base);
-}
-
-.stat-card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.stat-icon {
-  font-size: var(--font-xl);
-  margin-bottom: var(--space-2);
-}
-
-.stat-value {
-  font-size: var(--font-2xl);
-  font-weight: var(--weight-bold);
-  color: var(--accent-primary);
-  margin-bottom: var(--space-1);
-}
-
-.stat-label {
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
 }
 
 .section {
@@ -225,36 +187,17 @@ h2 {
   gap: var(--space-4);
 }
 
-.guide-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  transition: all var(--transition-base);
-}
-
-.guide-card:hover {
-  border-color: var(--border-hover);
-}
-
-.guide-card h3 {
+.guide-cards h3 {
   margin: 0 0 var(--space-2);
   font-size: var(--font-md);
   color: var(--accent-primary);
 }
 
-.guide-card p {
+.guide-cards p {
   margin: 0;
   font-size: var(--font-sm);
   color: var(--text-secondary);
   line-height: var(--line-height-relaxed);
-}
-
-.status-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
 }
 
 .status-item {

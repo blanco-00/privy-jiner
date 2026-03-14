@@ -1,6 +1,6 @@
 <template>
   <div class="finance-page">
-    <h1>{{ t('finance.title') }}</h1>
+    <PageHeader :title="t('finance.title')" />
     
     <div class="tabs">
       <button 
@@ -15,38 +15,39 @@
 
     <!-- Summary Stats -->
     <div v-if="activeTab === 'transactions'" class="stats">
-      <div class="stat-card income">
-        <div class="stat-value">{{ currency }}{{ summary.income.toFixed(2) }}</div>
-        <div class="stat-label">{{ t('finance.income') }}</div>
-      </div>
-      <div class="stat-card expense">
-        <div class="stat-value">{{ currency }}{{ summary.expense.toFixed(2) }}</div>
-        <div class="stat-label">{{ t('finance.expense') }}</div>
-      </div>
-      <div class="stat-card" :class="summary.balance >= 0 ? 'income' : 'expense'">
-        <div class="stat-value">{{ currency }}{{ summary.balance.toFixed(2) }}</div>
-        <div class="stat-label">{{ t('finance.balance') }}</div>
-      </div>
+      <StatCard 
+        :label="t('finance.income')" 
+        :value="`${currency}${summary.income.toFixed(2)}`"
+        :trend="summary.income > 0 ? 0 : undefined"
+      />
+      <StatCard 
+        :label="t('finance.expense')" 
+        :value="`${currency}${summary.expense.toFixed(2)}`"
+        :trend="summary.expense > 0 ? -1 : undefined"
+      />
+      <StatCard 
+        :label="t('finance.balance')" 
+        :value="`${currency}${summary.balance.toFixed(2)}`"
+        :trend="summary.balance >= 0 ? 1 : -1"
+      />
     </div>
 
     <!-- Investment Summary -->
     <div v-if="activeTab === 'investments'" class="stats">
-      <div class="stat-card">
-        <div class="stat-value">{{ currency }}{{ investmentSummary.totalValue.toFixed(2) }}</div>
-        <div class="stat-label">{{ t('finance.totalValue') }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" :class="investmentSummary.totalGainLoss >= 0 ? 'positive' : 'negative'">
-          {{ investmentSummary.totalGainLoss >= 0 ? '+' : '' }}{{ currency }}{{ investmentSummary.totalGainLoss.toFixed(2) }}
-        </div>
-        <div class="stat-label">{{ t('finance.gainLoss') }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" :class="investmentSummary.percentChange >= 0 ? 'positive' : 'negative'">
-          {{ investmentSummary.percentChange >= 0 ? '+' : '' }}{{ investmentSummary.percentChange.toFixed(2) }}%
-        </div>
-        <div class="stat-label">{{ t('finance.percentChange') }}</div>
-      </div>
+      <StatCard 
+        :label="t('finance.totalValue')" 
+        :value="`${currency}${investmentSummary.totalValue.toFixed(2)}`"
+      />
+      <StatCard 
+        :label="t('finance.gainLoss')" 
+        :value="`${investmentSummary.totalGainLoss >= 0 ? '+' : ''}${currency}${investmentSummary.totalGainLoss.toFixed(2)}`"
+        :trend="investmentSummary.totalGainLoss >= 0 ? 1 : -1"
+      />
+      <StatCard 
+        :label="t('finance.percentChange')" 
+        :value="`${investmentSummary.percentChange >= 0 ? '+' : ''}${investmentSummary.percentChange.toFixed(2)}%`"
+        :trend="investmentSummary.percentChange >= 0 ? 1 : -1"
+      />
     </div>
 
     <!-- Tab Content -->
@@ -54,8 +55,10 @@
       
       <!-- Transactions Tab -->
       <div v-if="activeTab === 'transactions'" class="tab-pane">
-        <div class="card">
-          <h2>{{ t('finance.addTransaction') }}</h2>
+        <Card variant="form">
+          <template #header>
+            <h2>{{ t('finance.addTransaction') }}</h2>
+          </template>
           <form @submit.prevent="addTransaction" class="form">
             <div class="form-row">
               <select v-model="newTx.type" required>
@@ -76,10 +79,12 @@
             <input v-model="newTx.description" type="text" :placeholder="t('finance.description') + ' (' + t('finance.selectCategory') + ')'" />
             <button type="submit" class="btn-primary">{{ t('finance.addTransaction') }}</button>
           </form>
-        </div>
+        </Card>
 
-        <div class="card">
-          <h2>{{ t('finance.recentTransactions') }}</h2>
+        <Card variant="content">
+          <template #header>
+            <h2>{{ t('finance.recentTransactions') }}</h2>
+          </template>
           <div class="transaction-list">
             <div v-for="tx in transactions" :key="tx.id" class="transaction-item">
               <div class="tx-info">
@@ -91,17 +96,21 @@
                 {{ tx.type === 'income' ? '+' : '-' }}{{ currency }}{{ tx.amount.toFixed(2) }}
               </div>
             </div>
-            <div v-if="transactions.length === 0" class="empty">
-              {{ t('finance.noTransactions') }}
-            </div>
+            <EmptyState 
+              v-if="transactions.length === 0"
+              icon="💳"
+              :title="t('finance.noTransactions')"
+            />
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- Budgets Tab -->
       <div v-if="activeTab === 'budgets'" class="tab-pane">
-        <div class="card">
-          <h2>{{ t('finance.createBudget') }}</h2>
+        <Card variant="form">
+          <template #header>
+            <h2>{{ t('finance.createBudget') }}</h2>
+          </template>
           <form @submit.prevent="createBudget" class="form">
             <div class="form-row">
               <select v-model="newBudget.category_id">
@@ -119,10 +128,12 @@
             </select>
             <button type="submit" class="btn-primary">{{ t('finance.createBudget') }}</button>
           </form>
-        </div>
+        </Card>
 
-        <div class="card">
-          <h2>{{ t('finance.budgetProgress') }}</h2>
+        <Card variant="content">
+          <template #header>
+            <h2>{{ t('finance.budgetProgress') }}</h2>
+          </template>
           <div class="budget-list">
             <div v-for="budget in budgets" :key="budget.id" class="budget-item">
               <div class="budget-header">
@@ -136,17 +147,21 @@
                 <button @click="deleteBudget(budget.id)" class="btn-delete">{{ t('finance.delete') }}</button>
               </div>
             </div>
-            <div v-if="budgets.length === 0" class="empty">
-              {{ t('finance.noBudgets') }}
-            </div>
+            <EmptyState 
+              v-if="budgets.length === 0"
+              icon="📊"
+              :title="t('finance.noBudgets')"
+            />
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- Investments Tab -->
       <div v-if="activeTab === 'investments'" class="tab-pane">
-        <div class="card">
-          <h2>{{ t('finance.addInvestment') }}</h2>
+        <Card variant="form">
+          <template #header>
+            <h2>{{ t('finance.addInvestment') }}</h2>
+          </template>
           <form @submit.prevent="createInvestment" class="form">
             <div class="form-row">
               <input v-model="newInvestment.name" type="text" :placeholder="t('finance.investmentName')" required />
@@ -169,10 +184,12 @@
             <input v-model="newInvestment.notes" type="text" :placeholder="t('finance.notes')" />
             <button type="submit" class="btn-primary">{{ t('finance.addInvestment') }}</button>
           </form>
-        </div>
+        </Card>
 
-        <div class="card">
-          <h2>{{ t('finance.myInvestments') }}</h2>
+        <Card variant="content">
+          <template #header>
+            <h2>{{ t('finance.myInvestments') }}</h2>
+          </template>
           <div class="investment-list">
             <div v-for="inv in investments" :key="inv.id" class="investment-item">
               <div class="inv-info">
@@ -194,17 +211,21 @@
                 <button @click="deleteInvestment(inv.id)" class="btn-delete">{{ t('finance.delete') }}</button>
               </div>
             </div>
-            <div v-if="investments.length === 0" class="empty">
-              {{ t('finance.noInvestments') }}
-            </div>
+            <EmptyState 
+              v-if="investments.length === 0"
+              icon="📈"
+              :title="t('finance.noInvestments')"
+            />
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- Bills Tab -->
       <div v-if="activeTab === 'bills'" class="tab-pane">
-        <div class="card">
-          <h2>{{ t('finance.addBill') }}</h2>
+        <Card variant="form">
+          <template #header>
+            <h2>{{ t('finance.addBill') }}</h2>
+          </template>
           <form @submit.prevent="createBill" class="form">
             <div class="form-row">
               <input v-model="newBill.name" type="text" :placeholder="t('finance.billName')" required />
@@ -223,10 +244,12 @@
             </div>
             <button type="submit" class="btn-primary">{{ t('finance.addBill') }}</button>
           </form>
-        </div>
+        </Card>
 
-        <div class="card">
-          <h2>{{ t('finance.upcomingBills') }}</h2>
+        <Card variant="content">
+          <template #header>
+            <h2>{{ t('finance.upcomingBills') }}</h2>
+          </template>
           <div class="bill-list">
             <div v-for="bill in upcomingBills" :key="bill.id" class="bill-item">
               <div class="bill-info">
@@ -241,14 +264,18 @@
                 <button @click="deleteBill(bill.id)" class="btn-delete">{{ t('finance.delete') }}</button>
               </div>
             </div>
-            <div v-if="upcomingBills.length === 0" class="empty">
-              {{ t('finance.noUpcomingBills') }}
-            </div>
+            <EmptyState 
+              v-if="upcomingBills.length === 0"
+              icon="📄"
+              :title="t('finance.noUpcomingBills')"
+            />
           </div>
-        </div>
+        </Card>
 
-        <div class="card">
-          <h2>{{ t('finance.allBills') }}</h2>
+        <Card variant="content">
+          <template #header>
+            <h2>{{ t('finance.allBills') }}</h2>
+          </template>
           <div class="bill-list">
             <div v-for="bill in bills" :key="bill.id" class="bill-item">
               <div class="bill-info">
@@ -265,13 +292,15 @@
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- Reports Tab -->
       <div v-if="activeTab === 'reports'" class="tab-pane">
-        <div class="card">
-          <h2>{{ t('finance.monthlyReport') }}</h2>
+        <Card variant="content">
+          <template #header>
+            <h2>{{ t('finance.monthlyReport') }}</h2>
+          </template>
           <div class="report-filters">
             <select v-model="reportYear">
               <option v-for="y in [2023,2024,2025,2026]" :key="y" :value="y">{{ y }}</option>
@@ -308,17 +337,19 @@
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div class="card">
-          <h2>{{ t('finance.exportData') }}</h2>
+        <Card variant="content">
+          <template #header>
+            <h2>{{ t('finance.exportData') }}</h2>
+          </template>
           <div class="export-form">
             <input v-model="exportStartDate" type="date" />
             <span>→</span>
             <input v-model="exportEndDate" type="date" />
             <button @click="exportCSV" class="btn-primary">{{ t('finance.exportCSV') }}</button>
           </div>
-        </div>
+        </Card>
       </div>
 
     </div>
@@ -328,6 +359,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useI18n } from '../composables/useI18n';
+import PageHeader from '../components/PageHeader.vue';
+import Card from '../components/Card.vue';
+import StatCard from '../components/StatCard.vue';
+import EmptyState from '../components/EmptyState.vue';
 
 const { t, initLocale, currency } = useI18n();
 
@@ -698,317 +733,295 @@ function formatDate(date: string): string {
 
 <style scoped>
 .finance-page {
-  padding: 32px;
+  padding: var(--space-lg);
   max-width: 900px;
   margin: 0 auto;
 }
 
-h1 {
-  margin: 0 0 24px;
-  font-size: 28px;
-  color: #f5f5f5;
-}
-
 h2 {
-  margin: 0 0 16px;
-  font-size: 18px;
-  color: #888;
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
 }
 
 h3 {
-  margin: 20px 0 12px;
-  font-size: 16px;
-  color: #aaa;
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: var(--font-md);
+  color: var(--text-tertiary);
 }
 
 .tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
   flex-wrap: wrap;
 }
 
 .tab {
   padding: 10px 16px;
-  font-size: 14px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #888;
+  font-size: var(--font-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .tab:hover {
-  background: #242424;
-  color: #f5f5f5;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .tab.active {
-  background: #e8a854;
-  color: #0f0f0f;
-  border-color: #e8a854;
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-}
-
-.stat-card.income .stat-value { color: #54e88a; }
-.stat-card.expense .stat-value { color: #e85454; }
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #e8a854;
-  margin-bottom: 4px;
-}
-
-.stat-value.positive { color: #54e88a; }
-.stat-value.negative { color: #e85454; }
-
-.stat-label {
-  font-size: 13px;
-  color: #888;
-}
-
-.card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 input, select {
-  padding: 12px;
-  font-size: 14px;
-  background: #242424;
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #f5f5f5;
+  padding: var(--space-sm);
+  font-size: var(--font-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
   outline: none;
 }
 
 input:focus, select:focus {
-  border-color: #e8a854;
+  border-color: var(--accent-primary);
 }
 
 .btn-primary {
-  padding: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  background: #e8a854;
-  color: #0f0f0f;
+  padding: var(--space-sm);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+  background: var(--accent-primary);
+  color: var(--bg-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
 .btn-small {
   padding: 6px 12px;
-  font-size: 12px;
-  background: #333;
-  color: #f5f5f5;
+  font-size: var(--font-xs);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 .btn-delete {
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   background: transparent;
-  color: #e85454;
-  border: 1px solid #e85454;
-  border-radius: 6px;
+  color: var(--accent-danger);
+  border: 1px solid var(--accent-danger);
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 .btn-paid {
-  background: #54e88a;
-  color: #0f0f0f;
+  background: var(--accent-success);
+  color: var(--bg-primary);
 }
 
 /* Transaction List */
 .transaction-list, .budget-list, .investment-list, .bill-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .transaction-item, .bill-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  background: #242424;
-  border-radius: 8px;
+  padding: var(--space-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
 }
 
 .tx-info, .bill-info, .inv-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .tx-icon { font-size: 18px; }
-.tx-desc, .bill-name, .inv-name { color: #f5f5f5; font-size: 14px; }
-.tx-date, .bill-due, .inv-type { color: #666; font-size: 12px; margin-left: 8px; }
+.tx-desc, .bill-name, .inv-name { color: var(--text-primary); font-size: var(--font-sm); }
+.tx-date, .bill-due, .inv-type { color: var(--text-tertiary); font-size: var(--font-xs); margin-left: var(--space-xs); }
 
 .tx-amount, .bill-amount {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
 }
-.tx-amount.income { color: #54e88a; }
-.tx-amount.expense { color: #e85454; }
+.tx-amount.income { color: var(--accent-success); }
+.tx-amount.expense { color: var(--accent-danger); }
 
 .bill-status {
-  font-size: 11px;
+  font-size: var(--font-xs);
   padding: 2px 6px;
-  border-radius: 4px;
-  background: #54e88a;
-  color: #0f0f0f;
+  border-radius: var(--radius-sm);
+  background: var(--accent-success);
+  color: var(--bg-primary);
 }
-.bill-status.inactive { background: #666; }
+.bill-status.inactive { background: var(--text-tertiary); }
 
 .bill-actions, .inv-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 /* Budget */
 .budget-item {
-  padding: 16px;
-  background: #242424;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
 }
 
 .budget-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-xs);
 }
 
-.budget-name { color: #f5f5f5; font-size: 14px; }
-.budget-amount { color: #888; font-size: 13px; }
+.budget-name { color: var(--text-primary); font-size: var(--font-sm); }
+.budget-amount { color: var(--text-secondary); font-size: var(--font-sm); }
 
 .progress-bar {
   height: 8px;
-  background: #333;
-  border-radius: 4px;
+  background: var(--border-primary);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .progress {
   height: 100%;
-  background: linear-gradient(90deg, #54a8e8, #54e88a);
-  transition: width 0.3s;
+  background: linear-gradient(90deg, var(--accent-info), var(--accent-success));
+  transition: width var(--transition-base);
 }
 
-.progress.over { background: #e85454; }
+.progress.over { background: var(--accent-danger); }
 
 .budget-actions {
-  margin-top: 8px;
+  margin-top: var(--space-xs);
 }
 
 /* Investment */
+.investment-item {
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+}
+
 .inv-values {
-  margin-top: 8px;
+  margin-top: var(--space-xs);
 }
 
 .inv-value {
   display: flex;
-  gap: 8px;
-  font-size: 13px;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
 }
 
-.inv-value .label { color: #888; }
-.inv-value .value { color: #f5f5f5; }
-.inv-value.positive .value { color: #54e88a; }
-.inv-value.negative .value { color: #e85454; }
+.inv-value .label { color: var(--text-secondary); }
+.inv-value .value { color: var(--text-primary); }
+.inv-value.positive .value { color: var(--accent-success); }
+.inv-value.negative .value { color: var(--accent-danger); }
 
 /* Report */
 .report-filters {
   display: flex;
-  gap: 12px;
+  gap: var(--space-sm);
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .report-content {
-  margin-top: 20px;
+  margin-top: var(--space-lg);
 }
 
 .report-summary {
   display: flex;
-  gap: 24px;
-  padding: 16px;
-  background: #242424;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
 }
 
 .report-item {
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
-.report-item .label { color: #888; }
-.report-item .value { font-weight: 600; }
-.report-item .value.positive { color: #54e88a; }
-.report-item .value.negative { color: #e85454; }
+.report-item .label { color: var(--text-secondary); }
+.report-item .value { font-weight: var(--weight-semibold); }
+.report-item .value.positive { color: var(--accent-success); }
+.report-item .value.negative { color: var(--accent-danger); }
 
 .category-breakdown {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .category-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: #242424;
-  border-radius: 6px;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
 }
 
-.cat-name { color: #f5f5f5; }
-.cat-amount { color: #888; }
+.cat-name { color: var(--text-primary); }
+.cat-amount { color: var(--text-secondary); }
 
 .export-form {
   display: flex;
-  gap: 12px;
+  gap: var(--space-sm);
   align-items: center;
 }
 
-.empty {
-  text-align: center;
-  padding: 32px;
-  color: #666;
+/* Responsive */
+@media (max-width: 768px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .report-summary {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
 }
 </style>
