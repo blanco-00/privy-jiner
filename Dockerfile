@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY packages/core/package*.json packages/core/
 COPY packages/ai/package*.json packages/ai/
-COPY packages/dashboard/package*.json packages/dashboard/
+COPY packages/web/package*.json packages/web/
 COPY packages/i18n/package*.json packages/i18n/
 COPY packages/modules/package*.json packages/modules/
 

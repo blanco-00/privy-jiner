@@ -232,11 +232,11 @@ Update `cors` configuration in `config/server.json`:
 
 **Solution**:
 ```bash
-# Check if dashboard is built
-ls -la packages/dashboard/dist/
+# Check if web is built
+ls -la packages/web/dist/
 
-# Rebuild dashboard
-npm run build:dashboard
+# Rebuild web
+npm run build:web
 
 # Check browser console for errors
 ```
@@ -257,7 +257,7 @@ npm run build:dashboard
 **Solution**:
 ```bash
 # Check static files exist
-ls packages/dashboard/dist/
+ls packages/web/dist/
 
 # Rebuild with fresh cache
 npm run clean

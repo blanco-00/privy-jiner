@@ -62,7 +62,7 @@
 
 ### 修改 Package
 - `packages/core` - 扩展 FinanceService, HealthService
-- `packages/dashboard` - 新增页面和组件
+- `packages/web` - 新增页面和组件
 
 ### 数据库
 - 新增 finance_budgets 表
