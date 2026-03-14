@@ -1,5 +1,10 @@
 export const translations = {
   en: {
+    nav: {
+      personal: 'Personal',
+      life: 'Life',
+      system: 'System',
+    },
     app: {
       dashboard: 'Dashboard',
       profile: 'Profile',
@@ -351,6 +356,11 @@ export const translations = {
     },
   },
   zh: {
+    nav: {
+      personal: '个人',
+      life: '生活',
+      system: '系统',
+    },
     app: {
       dashboard: '控制台',
       profile: '个人资料',

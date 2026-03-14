@@ -122,134 +122,146 @@ onMounted(async () => {
 
 <style scoped>
 .dashboard-page {
-  padding: 32px;
+  padding: var(--space-8);
   max-width: 1200px;
   margin: 0 auto;
 }
 
 h1 {
-  margin: 0 0 8px;
-  font-size: 28px;
-  color: #f5f5f5;
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-2xl);
+  color: var(--text-primary);
 }
 
 .subtitle {
-  margin: 0 0 32px;
-  color: #888;
+  margin: 0 0 var(--space-8);
+  color: var(--text-secondary);
 }
 
 h2 {
-  margin: 0 0 16px;
-  font-size: 18px;
-  color: #888;
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-lg);
+  color: var(--text-secondary);
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 40px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-10);
 }
 
 .stat-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
   text-align: center;
+  transition: all var(--transition-base);
+}
+
+.stat-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
+  font-size: var(--font-xl);
+  margin-bottom: var(--space-2);
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #e8a854;
-  margin-bottom: 4px;
+  font-size: var(--font-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--accent-primary);
+  margin-bottom: var(--space-1);
 }
 
 .stat-label {
-  font-size: 13px;
-  color: #888;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
 }
 
 .section {
-  margin-bottom: 40px;
+  margin-bottom: var(--space-10);
 }
 
 .actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px;
-  font-size: 14px;
-  font-weight: 600;
-  background: #1a1a1a;
-  color: #f5f5f5;
-  border: 1px solid #333;
-  border-radius: 12px;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .action-btn:hover {
-  background: #242424;
-  border-color: #e8a854;
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
   transform: translateY(-2px);
 }
 
 .action-icon {
-  font-size: 24px;
+  font-size: var(--font-xl);
 }
 
 .guide-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .guide-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: all var(--transition-base);
+}
+
+.guide-card:hover {
+  border-color: var(--border-hover);
 }
 
 .guide-card h3 {
-  margin: 0 0 8px;
-  font-size: 15px;
-  color: #e8a854;
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-md);
+  color: var(--accent-primary);
 }
 
 .guide-card p {
   margin: 0;
-  font-size: 13px;
-  color: #888;
-  line-height: 1.5;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
 }
 
 .status-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
 }
 
 .status-item {
   display: flex;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #333;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .status-item:last-child {
@@ -257,14 +269,14 @@ h2 {
 }
 
 .status-label {
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .status-value {
-  color: #f5f5f5;
+  color: var(--text-primary);
 }
 
 .status-value.success {
-  color: #54e88a;
+  color: var(--accent-success);
 }
 </style>
