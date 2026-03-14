@@ -1,0 +1,44 @@
+{
+  "name": "@privy-jiner/monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Privy-Jiner - Personal AI Assistant (Open Source)",
+  "workspaces": [
+    "packages/*",
+    "packages/modules/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "packageManager": "npm@10.0.0",
+  "keywords": [
+    "ai",
+    "assistant",
+    "personal-assistant",
+    "openclaw",
+    "plugin"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blanco-00/privy-jiner"
+  },
+  "dependencies": {
+    "@types/pg": "^8.18.0",
+    "mysql2": "^3.19.1",
+    "pg": "^8.20.0"
+  }
+}

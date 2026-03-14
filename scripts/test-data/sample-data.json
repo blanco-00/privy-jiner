@@ -1,0 +1,109 @@
+{
+  "finance": [
+    {
+      "type": "income",
+      "amount": 10000,
+      "category": "salary",
+      "description": "Monthly salary",
+      "date": "2026-03-01"
+    },
+    {
+      "type": "expense",
+      "amount": 2500,
+      "category": "rent",
+      "description": "Monthly rent",
+      "date": "2026-03-05"
+    },
+    {
+      "type": "expense",
+      "amount": 500,
+      "category": "food",
+      "description": "Grocery shopping",
+      "date": "2026-03-10"
+    },
+    {
+      "type": "investment",
+      "amount": 2000,
+      "category": "stock",
+      "description": "Monthly stock investment",
+      "date": "2026-03-15"
+    },
+    {
+      "type": "expense",
+      "amount": 150,
+      "category": "utilities",
+      "description": "Electricity bill",
+      "date": "2026-03-20"
+    }
+  ],
+  "health": [
+    {
+      "type": "water",
+      "amount": 2000,
+      "date": "2026-03-13",
+      "goal": 2500
+    },
+    {
+      "type": "exercise",
+      "activity": "running",
+      "duration": 30,
+      "date": "2026-03-13",
+      "goal": 150
+    },
+    {
+      "type": "exercise",
+      "activity": "cycling",
+      "duration": 45,
+      "date": "2026-03-12",
+      "goal": 150
+    }
+  ],
+  "fashion": [
+    {
+      "type": "item",
+      "name": "Blue Denim Jacket",
+      "category": "outerwear",
+      "color": "blue",
+      "season": ["spring", "fall"],
+      "favorite": true
+    },
+    {
+      "type": "item",
+      "name": "White T-Shirt",
+      "category": "tops",
+      "color": "white",
+      "season": ["spring", "summer"],
+      "favorite": false
+    },
+    {
+      "type": "outfit",
+      "name": "Casual Friday",
+      "items": ["Blue Denim Jacket", "White T-Shirt"],
+      "rating": 4,
+      "date": "2026-03-10"
+    }
+  ],
+  "knowledge": [
+    {
+      "title": "The Benefits of Morning Routines",
+      "content": "Starting your day with a consistent morning routine can improve productivity, reduce stress, and provide a sense of control over your day.",
+      "category": "productivity",
+      "tags": ["morning", "routine", "productivity"]
+    },
+    {
+      "title": "Understanding Nutrition Labels",
+      "content": "Learn how to read nutrition labels to make healthier food choices. Pay attention to serving sizes, calories, and nutritional values.",
+      "category": "health",
+      "tags": ["nutrition", "health", "food"]
+    }
+  ],
+  "news": [
+    {
+      "title": "Technology Trends in 2026",
+      "source": "Tech News",
+      "category": "technology",
+      "url": "https://example.com/tech-trends-2026",
+      "summary": "An overview of the latest technology trends shaping our world."
+    }
+  ]
+}

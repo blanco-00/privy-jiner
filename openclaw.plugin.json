@@ -1,0 +1,28 @@
+{
+  "id": "privy-jiner",
+  "name": "Privy-Jiner Personal Assistant",
+  "version": "1.0.0",
+  "description": "Personal AI assistant with finance, health, fashion, knowledge, and news modules",
+  "author": "Privy-Jiner Team",
+  "entry": "dist/openclaw-plugin.js",
+  "dependencies": {},
+  "capabilities": [
+    "finance_record",
+    "finance_query",
+    "finance_report",
+    "health_log_water",
+    "health_log_exercise",
+    "health_query",
+    "fashion_add_item",
+    "fashion_log_outfit",
+    "fashion_recommend"
+  ],
+  "database": {
+    "mode": "shared",
+    "path": "data/privy-jiner.db"
+  },
+  "openclaw": {
+    "type": "personal-assistant",
+    "gatewayVersion": ">=1.0.0"
+  }
+}
