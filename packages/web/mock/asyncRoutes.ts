@@ -124,6 +124,7 @@ const permissionRouter = {
       path: "/permission/page/index",
       name: "PermissionPage",
       meta: {
+        icon: "ep:document",
         title: "menus.purePermissionPage",
         roles: ["admin", "common"]
       }
@@ -131,6 +132,7 @@ const permissionRouter = {
     {
       path: "/permission/button",
       meta: {
+        icon: "ep:pointer",
         title: "menus.purePermissionButton",
         roles: ["admin", "common"]
       },
@@ -140,6 +142,7 @@ const permissionRouter = {
           component: "permission/button/index",
           name: "PermissionButtonRouter",
           meta: {
+            icon: "ep:router",
             title: "menus.purePermissionButtonRouter",
             auths: [
               "permission:btn:add",
@@ -153,6 +156,7 @@ const permissionRouter = {
           component: "permission/button/perms",
           name: "PermissionButtonLogin",
           meta: {
+            icon: "ep:key",
             title: "menus.purePermissionButtonLogin"
           }
         }
@@ -164,7 +168,7 @@ const permissionRouter = {
 const frameRouter = {
   path: "/iframe",
   meta: {
-    icon: "ri:links-fill",
+    icon: "ri/links-fill",
     title: "menus.pureExternalPage",
     rank: frame
   },
@@ -172,6 +176,7 @@ const frameRouter = {
     {
       path: "/iframe/embedded",
       meta: {
+        icon: "ep:link",
         title: "menus.pureEmbeddedDoc"
       },
       children: [
@@ -179,6 +184,7 @@ const frameRouter = {
           path: "/iframe/colorhunt",
           name: "FrameColorHunt",
           meta: {
+            icon: "ep:palette",
             title: "menus.pureColorHuntDoc",
             frameSrc: "https://colorhunt.co/",
             keepAlive: true,
@@ -189,6 +195,7 @@ const frameRouter = {
           path: "/iframe/uigradients",
           name: "FrameUiGradients",
           meta: {
+            icon: "ep:gradient",
             title: "menus.pureUiGradients",
             frameSrc: "https://uigradients.com/",
             keepAlive: true,
@@ -199,6 +206,7 @@ const frameRouter = {
           path: "/iframe/ep",
           name: "FrameEp",
           meta: {
+            icon: "ep:grid",
             title: "menus.pureEpDoc",
             frameSrc: "https://element-plus.org/zh-CN/",
             keepAlive: true,
@@ -209,6 +217,7 @@ const frameRouter = {
           path: "/iframe/tailwindcss",
           name: "FrameTailwindcss",
           meta: {
+            icon: "ep:css",
             title: "menus.pureTailwindcssDoc",
             frameSrc: "https://tailwindcss.com/docs/installation",
             keepAlive: true,
@@ -219,6 +228,7 @@ const frameRouter = {
           path: "/iframe/vue3",
           name: "FrameVue",
           meta: {
+            icon: "ep:vue",
             title: "menus.pureVueDoc",
             frameSrc: "https://cn.vuejs.org/",
             keepAlive: true,
@@ -229,6 +239,7 @@ const frameRouter = {
           path: "/iframe/vite",
           name: "FrameVite",
           meta: {
+            icon: "ep:lightning",
             title: "menus.pureViteDoc",
             frameSrc: "https://cn.vitejs.dev/",
             keepAlive: true,
@@ -239,6 +250,7 @@ const frameRouter = {
           path: "/iframe/pinia",
           name: "FramePinia",
           meta: {
+            icon: "ep:box",
             title: "menus.purePiniaDoc",
             frameSrc: "https://pinia.vuejs.org/zh/index.html",
             keepAlive: true,
@@ -249,6 +261,7 @@ const frameRouter = {
           path: "/iframe/vue-router",
           name: "FrameRouter",
           meta: {
+            icon: "ep:connection",
             title: "menus.pureRouterDoc",
             frameSrc: "https://router.vuejs.org/zh/",
             keepAlive: true,
@@ -260,6 +273,7 @@ const frameRouter = {
     {
       path: "/iframe/external",
       meta: {
+        icon: "ep:share",
         title: "menus.pureExternalDoc"
       },
       children: [
@@ -267,6 +281,7 @@ const frameRouter = {
           path: "/external",
           name: "https://pure-admin.cn/",
           meta: {
+            icon: "ep:data-board",
             title: "menus.pureExternalLink",
             roles: ["admin", "common"]
           }
@@ -275,6 +290,7 @@ const frameRouter = {
           path: "/pureUtilsLink",
           name: "https://pure-admin-utils.netlify.app/",
           meta: {
+            icon: "ep:toolbox",
             title: "menus.pureUtilsLink",
             roles: ["admin", "common"]
           }
@@ -287,7 +303,7 @@ const frameRouter = {
 const tabsRouter = {
   path: "/tabs",
   meta: {
-    icon: "ri:bookmark-2-line",
+    icon: "ri/bookmark-2-line",
     title: "menus.pureTabs",
     rank: tabs
   },
@@ -296,6 +312,7 @@ const tabsRouter = {
       path: "/tabs/index",
       name: "Tabs",
       meta: {
+        icon: "ep:collection",
         title: "menus.pureTabs",
         roles: ["admin", "common"]
       }

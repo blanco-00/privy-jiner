@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useColumns } from "./columns";
+import { $t } from "@/plugins/i18n";
+import { schema } from "./data";
+import { columns } from "./columns";
+import { getMainLabel } from "./utils";
 
-export interface schemaItem {
-  field: string;
-  label: string;
-}
+import versionImg from "@/assets/version.png";
 
 defineOptions({
   name: "About"
@@ -72,18 +71,23 @@ Object.keys(devDependencies).forEach(key => {
     <el-card class="m-4 box-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span class="font-medium">平台信息</span>
+          <span class="font-medium">{{ $t("about.platformInfo") }}</span>
         </div>
       </template>
       <el-scrollbar>
-        <PureDescriptions border :columns="columns" :column="4" />
+        <el-descriptions border :column="4">
+          <el-descriptions-item v-for="(col, idx) in columns" :key="idx" :label="col.label" :label-align="col.labelAlign">
+            <component :is="col.cellRenderer" v-if="col.cellRenderer" />
+            <span v-else>{{ col.field }}</span>
+          </el-descriptions-item>
+        </el-descriptions>
       </el-scrollbar>
     </el-card>
 
     <el-card class="m-4 box-card" shadow="never">
       <template #header>
         <div class="card-header flex items-center">
-          <span class="font-medium">生产环境依赖</span>
+          <span class="font-medium">{{ $t("about.prodDeps") }}</span>
           <el-tag type="primary" effect="dark" size="small" round class="ml-1">
             {{ schema.length }}
           </el-tag>
@@ -118,7 +122,7 @@ Object.keys(devDependencies).forEach(key => {
     <el-card class="m-4 box-card" shadow="never">
       <template #header>
         <div class="card-header flex items-center">
-          <span class="font-medium">开发环境依赖</span>
+          <span class="font-medium">{{ $t("about.devDeps") }}</span>
           <el-tag type="primary" effect="dark" size="small" round class="ml-1">
             {{ devSchema.length }}
           </el-tag>

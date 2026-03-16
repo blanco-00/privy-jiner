@@ -1,9 +1,16 @@
 import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 
+export interface ProviderModel {
+  id: string;
+  name: string;
+  created?: number;
+  description?: string;
+}
+
 export interface AIModel {
   id: string;
-  provider: 'openai' | 'claude' | 'other';
+  provider: 'openai' | 'claude' | 'zhipu' | 'minimax' | 'other';
   name: string;
   model: string;
   type: 'text' | 'voice' | 'embedding';
@@ -162,6 +169,122 @@ export class AIManager {
     const stmt = this.db.prepare('SELECT * FROM ai_models WHERE is_default = 1 AND enabled = 1');
     const row = stmt.get() as AIModelRow | undefined;
     return row ? this.mapRowToModel(row) : undefined;
+  }
+
+  getActiveModel(): AIModel | undefined {
+    const defaultModel = this.getDefaultModel();
+    if (defaultModel) return defaultModel;
+    
+    const enabledModels = this.getEnabledModels();
+    return enabledModels[0];
+  }
+
+  setActiveModel(id: string): boolean {
+    this.db.prepare('UPDATE ai_models SET is_default = 0').run();
+    const stmt = this.db.prepare('UPDATE ai_models SET is_default = 1 WHERE id = ?');
+    const result = stmt.run(id);
+    return result.changes > 0;
+  }
+
+  async fetchModelsFromProvider(provider: 'openai' | 'claude' | 'zhipu', apiKey?: string, baseUrl?: string): Promise<ProviderModel[]> {
+    const key = apiKey || (provider === 'openai' ? process.env.OPENAI_API_KEY : provider === 'claude' ? process.env.ANTHROPIC_API_KEY : process.env.ZHIPU_API_KEY);
+    if (!key) {
+      throw new Error(`${provider} API key not configured`);
+    }
+
+    if (provider === 'openai') {
+      const url = (baseUrl || 'https://api.openai.com/v1') + '/models';
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${key}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to fetch OpenAI models: ${error}`);
+      }
+
+      const data = await response.json() as {
+        data: Array<{ id: string; created: number; description?: string }>;
+      };
+
+      return data.data
+        .filter(m => m.id.startsWith('gpt-'))
+        .map(m => ({
+          id: m.id,
+          name: m.id,
+          created: m.created,
+          description: m.description,
+        }));
+    }
+
+    if (provider === 'claude') {
+      const url = (baseUrl || 'https://api.anthropic.com/v1') + '/models';
+      const response = await fetch(url, {
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to fetch Claude models: ${error}`);
+      }
+
+      const data = await response.json() as {
+        data: Array<{ id: string; name: string; description?: string }>;
+      };
+
+      return data.data.map(m => ({
+        id: m.id,
+        name: m.name,
+        description: m.description,
+      }));
+    }
+
+    if (provider === 'zhipu') {
+      const url = (baseUrl || 'https://open.bigmodel.cn/api/paas/v4') + '/models';
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${key}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to fetch Zhipu AI models: ${error}`);
+      }
+
+      const data = await response.json() as {
+        data: Array<{ id: string; created_at: number; description?: string }>;
+      };
+
+      return data.data.map(m => ({
+        id: m.id,
+        name: m.id,
+        created: m.created_at,
+        description: m.description,
+      }));
+    }
+
+    throw new Error(`Unsupported provider: ${provider}`);
+  }
+
+  async testProviderConnection(provider: 'openai' | 'claude' | 'zhipu', apiKey?: string, baseUrl?: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const models = await this.fetchModelsFromProvider(provider, apiKey, baseUrl);
+      return {
+        success: true,
+        message: `Connected successfully. Found ${models.length} models.`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 
   updateModel(id: string, updates: Partial<Pick<AIModel, 'name' | 'model' | 'apiKey' | 'baseUrl' | 'isDefault' | 'enabled'>>): AIModel | undefined {

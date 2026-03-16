@@ -8,10 +8,10 @@ defineOptions({
 
 <template>
   <div class="p-6">
-    <h2 class="text-2xl font-bold mb-4">仪表盘</h2>
-    <p class="text-gray-500">数据概览和统计</p>
+    <h2 class="text-2xl font-bold mb-4">{{ $t("pageContent.dashboardOverview") }}</h2>
+    <p class="text-gray-500">{{ $t("pageContent.dashboardWelcome") }}</p>
     <div class="mt-4 p-4 bg-white rounded-lg shadow">
-      <p class="text-gray-600">仪表盘功能开发中...</p>
+      <p class="text-gray-600">{{ $t("pageContent.dashboardOverview") }}</p>
     </div>
   </div>
 </template>

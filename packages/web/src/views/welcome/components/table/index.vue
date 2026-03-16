@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { $t } from "@/plugins/i18n";
 import { useColumns } from "./columns";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 
@@ -24,7 +25,7 @@ const { loading, columns, dataList, pagination, Empty, onCurrentChange } =
     @page-current-change="onCurrentChange"
   >
     <template #empty>
-      <el-empty description="暂无数据" :image-size="60">
+      <el-empty :description="$t('welcome.noData')" :image-size="60">
         <template #image>
           <Empty />
         </template>
@@ -35,7 +36,7 @@ const { loading, columns, dataList, pagination, Empty, onCurrentChange } =
         plain
         circle
         size="small"
-        :title="`查看序号为${row.id}的详情`"
+        :title="$t('welcome.viewDetails', { id: row.id })"
         :icon="useRenderIcon('ri:search-line')"
       />
     </template>

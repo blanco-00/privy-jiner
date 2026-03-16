@@ -5,6 +5,7 @@ import type { PaginationProps } from "@pureadmin/table";
 import ThumbUp from "~icons/ri/thumb-up-line";
 import Hearts from "~icons/ri/hearts-line";
 import Empty from "./empty.svg?component";
+import { $t } from "@/plugins/i18n";
 
 export function useColumns() {
   const dataList = ref([]);
@@ -12,12 +13,12 @@ export function useColumns() {
   const columns: TableColumnList = [
     {
       sortable: true,
-      label: "序号",
+      label: $t("welcome.orderNumber"),
       prop: "id"
     },
     {
       sortable: true,
-      label: "需求人数",
+      label: $t("welcome.requiredNumber"),
       prop: "requiredNumber",
       filterMultiple: false,
       filterClassName: "pure-table-filter",
@@ -33,17 +34,17 @@ export function useColumns() {
     },
     {
       sortable: true,
-      label: "提问数量",
+      label: $t("welcome.questionCount"),
       prop: "questionNumber"
     },
     {
       sortable: true,
-      label: "解决数量",
+      label: $t("welcome.resolveCount"),
       prop: "resolveNumber"
     },
     {
       sortable: true,
-      label: "用户满意度",
+      label: $t("welcome.userSatisfaction"),
       minWidth: 100,
       prop: "satisfaction",
       cellRenderer: ({ row }) => (
@@ -60,11 +61,11 @@ export function useColumns() {
     },
     {
       sortable: true,
-      label: "统计日期",
+      label: $t("welcome.statisticsDate"),
       prop: "date"
     },
     {
-      label: "操作",
+      label: $t("welcome.operation"),
       fixed: "right",
       slot: "operation"
     }

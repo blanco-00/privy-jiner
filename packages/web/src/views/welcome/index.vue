@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, markRaw } from "vue";
+import { ref, markRaw, onMounted, reactive, computed } from "vue";
+import { $t } from "@/plugins/i18n";
 import ReCol from "@/components/ReCol";
 import { useDark, randomGradient } from "./utils";
 import WelcomeTable from "./components/table/index.vue";
@@ -7,7 +8,12 @@ import { ReNormalCountTo } from "@/components/ReCountTo";
 import { useRenderFlicker } from "@/components/ReFlicker";
 import { ChartBar, ChartLine, ChartRound } from "./components/charts";
 import Segmented, { type OptionsType } from "@/components/ReSegmented";
-import { chartData, barChartData, progressData, latestNewsData } from "./data";
+import { barChartData, progressData, latestNewsData } from "./data";
+import { getWaterToday, getHealthSummary, getFinanceSummary } from "@/api/dashboard";
+import WalletLine from "~icons/ri/wallet-3-line";
+import DropLine from "~icons/ri/drop-line";
+import TaskLine from "~icons/ri/task-line";
+import HeartPulseLine from "~icons/ri/heart-pulse-line";
 
 defineOptions({
   name: "Welcome"
@@ -15,15 +21,115 @@ defineOptions({
 
 const { isDark } = useDark();
 
-let curWeek = ref(1); // 0上周、1本周
-const optionsBasis: Array<OptionsType> = [
+let curWeek = ref(1);
+const optionsBasis = computed<OptionsType[]>(() => [
   {
-    label: "上周"
+    label: $t("welcome.lastWeek")
   },
   {
-    label: "本周"
+    label: $t("welcome.thisWeek")
+  }
+]);
+
+interface ChartItem {
+  icon: any;
+  bgColor: string;
+  color: string;
+  duration: number;
+  name: string;
+  value: number;
+  unit: string;
+  percent: string;
+  data: number[];
+}
+
+const getChartData = (): ChartItem[] => [
+  {
+    icon: markRaw(WalletLine),
+    bgColor: "#effaff",
+    color: "#3b82f6",
+    duration: 2200,
+    name: $t("welcome.todayExpense"),
+    value: 0,
+    unit: $t("welcome.unitYuan"),
+    percent: "0%",
+    data: [0]
+  },
+  {
+    icon: markRaw(DropLine),
+    bgColor: "#eff8f4",
+    color: "#06b6d4",
+    duration: 1600,
+    name: $t("welcome.waterIntake"),
+    value: 0,
+    unit: $t("welcome.unitCup"),
+    percent: "0%",
+    data: [0]
+  },
+  {
+    icon: markRaw(TaskLine),
+    bgColor: "#fef3c7",
+    color: "#f59e0b",
+    duration: 1500,
+    name: $t("welcome.todoTasks"),
+    value: 5,
+    unit: $t("welcome.unitItem"),
+    percent: "+25%",
+    data: [8, 6, 7, 5, 4, 5, 6]
+  },
+  {
+    icon: markRaw(HeartPulseLine),
+    bgColor: "#fef2f2",
+    color: "#ef4444",
+    duration: 100,
+    name: $t("welcome.healthScore"),
+    value: 0,
+    unit: $t("welcome.unitPoint"),
+    percent: "0%",
+    data: [0]
   }
 ];
+
+const chartData = reactive<ChartItem[]>(getChartData());
+
+const loadDashboardData = async () => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const [waterRes, healthRes, financeRes] = await Promise.all([
+      getWaterToday(),
+      getHealthSummary(),
+      getFinanceSummary(today, today)
+    ]);
+
+    if (waterRes.code === 0 && waterRes.data) {
+      const waterCups = Math.round(waterRes.data.today / 250);
+      chartData[1].value = waterCups;
+      chartData[1].unit = $t("welcome.unitCup");
+      chartData[1].percent = waterCups >= 8 ? "+100%" : `-${Math.round((1 - waterCups / 8) * 100)}%`;
+    }
+
+    if (healthRes.code === 0 && healthRes.data) {
+      chartData[3].value = healthRes.data.healthScore || 85;
+      chartData[3].unit = $t("welcome.unitPoint");
+      chartData[3].percent = "+0%";
+    }
+
+    if (financeRes.code === 0 && financeRes.data) {
+      chartData[0].value = Math.round(financeRes.data.totalExpense || 0);
+      chartData[0].unit = $t("welcome.unitYuan");
+      const income = financeRes.data.totalIncome || 0;
+      const expense = financeRes.data.totalExpense || 0;
+      const change = income > 0 ? ((income - expense) / income * 100).toFixed(0) : "0";
+      chartData[0].percent = `${Number(change) >= 0 ? "+" : ""}${change}%`;
+    }
+  } catch (error) {
+    console.error("Failed to load dashboard data:", error);
+  }
+};
+
+onMounted(() => {
+  loadDashboardData();
+});
 </script>
 
 <template>
@@ -109,7 +215,7 @@ const optionsBasis: Array<OptionsType> = [
       >
         <el-card class="bar-card" shadow="never">
           <div class="flex justify-between">
-            <span class="text-md font-medium">分析概览</span>
+            <span class="text-md font-medium">{{ $t("welcome.analysisOverview") }}</span>
             <Segmented v-model="curWeek" :options="optionsBasis" />
           </div>
           <div class="flex justify-between items-start mt-3">
@@ -140,7 +246,7 @@ const optionsBasis: Array<OptionsType> = [
       >
         <el-card shadow="never">
           <div class="flex justify-between">
-            <span class="text-md font-medium">解决概率</span>
+            <span class="text-md font-medium">{{ $t("welcome.resolutionProbability") }}</span>
           </div>
           <div
             v-for="(item, index) in progressData"
@@ -187,7 +293,7 @@ const optionsBasis: Array<OptionsType> = [
       >
         <el-card shadow="never">
           <div class="flex justify-between">
-            <span class="text-md font-medium">数据统计</span>
+            <span class="text-md font-medium">{{ $t("welcome.dataStatistics") }}</span>
           </div>
           <el-scrollbar max-height="504" class="mt-3">
             <WelcomeTable />
@@ -214,7 +320,7 @@ const optionsBasis: Array<OptionsType> = [
       >
         <el-card shadow="never">
           <div class="flex justify-between">
-            <span class="text-md font-medium">最新动态</span>
+            <span class="text-md font-medium">{{ $t("welcome.latestNews") }}</span>
           </div>
           <el-scrollbar max-height="504" class="mt-3">
             <el-timeline>
@@ -234,9 +340,9 @@ const optionsBasis: Array<OptionsType> = [
                 "
                 :timestamp="item.date"
               >
-                <p class="text-text_color_regular text-sm">
-                  {{
-                    `新增 ${item.requiredNumber} 条问题，${item.resolveNumber} 条已解决`
+                <p class="text-sm">
+                  {-text_color_regular text{
+                    $t("welcome.newIssues", { required: item.requiredNumber, resolved: item.resolveNumber })
                   }}
                 </p>
               </el-timeline-item>

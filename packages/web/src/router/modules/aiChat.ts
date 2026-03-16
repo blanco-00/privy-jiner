@@ -21,6 +21,14 @@ export default {
       meta: {
         title: $t("menus.aiChatChat")
       }
+    },
+    {
+      path: "/ai-config",
+      name: "AiConfig",
+      component: () => import("@/views/ai-config/index.vue"),
+      meta: {
+        title: $t("menus.aiConfig")
+      }
     }
   ]
 } satisfies RouteConfigsTable;

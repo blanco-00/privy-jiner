@@ -1,9 +1,11 @@
+import { $t } from "@/plugins/i18n";
+
 export function useColumns() {
   const { pkg, lastBuildTime } = __APP_INFO__;
   const { version, engines } = pkg;
   const columns = [
     {
-      label: "当前版本",
+      label: $t("about.version"),
       minWidth: 100,
       cellRenderer: () => {
         return (
@@ -14,7 +16,7 @@ export function useColumns() {
       }
     },
     {
-      label: "最后编译时间",
+      label: $t("about.buildTime"),
       minWidth: 120,
       cellRenderer: () => {
         return (
@@ -25,7 +27,7 @@ export function useColumns() {
       }
     },
     {
-      label: "推荐 node 版本",
+      label: $t("about.nodeVersion"),
       minWidth: 140,
       cellRenderer: () => {
         return (
@@ -36,7 +38,7 @@ export function useColumns() {
       }
     },
     {
-      label: "推荐 pnpm 版本",
+      label: $t("about.pnpmVersion"),
       minWidth: 140,
       cellRenderer: () => {
         return (
@@ -47,7 +49,7 @@ export function useColumns() {
       }
     },
     {
-      label: "完整版代码地址",
+      label: $t("about.fullCode"),
       minWidth: 140,
       className: "pure-version",
       cellRenderer: () => {
@@ -56,13 +58,13 @@ export function useColumns() {
             href="https://github.com/pure-admin/vue-pure-admin"
             target="_blank"
           >
-            <span style="color: var(--el-color-primary)">完整版代码链接</span>
+            <span style="color: var(--el-color-primary)">{$t("about.fullCodeLink")}</span>
           </a>
         );
       }
     },
     {
-      label: "精简版代码地址",
+      label: $t("about.thinCode"),
       minWidth: 140,
       className: "pure-version",
       cellRenderer: () => {
@@ -71,31 +73,31 @@ export function useColumns() {
             href="https://github.com/pure-admin/pure-admin-thin"
             target="_blank"
           >
-            <span style="color: var(--el-color-primary)">精简版代码链接</span>
+            <span style="color: var(--el-color-primary)">{$t("about.thinCodeLink")}</span>
           </a>
         );
       }
     },
     {
-      label: "文档地址",
+      label: $t("about.docs"),
       minWidth: 100,
       className: "pure-version",
       cellRenderer: () => {
         return (
           <a href="https://pure-admin.cn/" target="_blank">
-            <span style="color: var(--el-color-primary)">文档链接</span>
+            <span style="color: var(--el-color-primary)">{$t("about.docsLink")}</span>
           </a>
         );
       }
     },
     {
-      label: "预览地址",
+      label: $t("about.preview"),
       minWidth: 100,
       className: "pure-version",
       cellRenderer: () => {
         return (
           <a href="https://pure-admin.github.io/vue-pure-admin" target="_blank">
-            <span style="color: var(--el-color-primary)">预览链接</span>
+            <span style="color: var(--el-color-primary)">{$t("about.previewLink")}</span>
           </a>
         );
       }

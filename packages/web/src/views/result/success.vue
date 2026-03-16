@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { $t } from "@/plugins/i18n";
+
 defineOptions({
   name: "Success"
 });
@@ -7,15 +9,15 @@ const { lastBuildTime } = __APP_INFO__;
 
 const columns = [
   {
-    label: "项目 ID：",
+    label: $t("result.projectId") + "：",
     value: "12345"
   },
   {
-    label: "负责人：",
-    value: "明明"
+    label: $t("result.owner") + "：",
+    value: "Admin"
   },
   {
-    label: "生效时间：",
+    label: $t("result.effectiveTime") + "：",
     value: lastBuildTime
   }
 ];
@@ -25,26 +27,26 @@ const columns = [
   <el-card shadow="never">
     <template #header>
       <div class="card-header">
-        <span class="font-medium">成功页</span>
+        <span class="font-medium">{{ $t("result.successPage") }}</span>
       </div>
       <el-link
         class="mt-2"
         href="https://github.com/pure-admin/vue-pure-admin/blob/main/src/views/result/success.vue"
         target="_blank"
       >
-        代码位置 src/views/result/success.vue
+        {{ $t("result.codeLocation") }}
       </el-link>
     </template>
     <el-result
       icon="success"
-      title="提交成功"
-      sub-title="提交结果页用于反馈一系列操作任务的处理结果， 如果仅是简单操作，使用 Message 全局提示反馈即可。 本文字区域可以展示简单的补充说明，如果有类似展示 “单据”的需求，下面这个灰色区域可以呈现比较复杂的内容。"
+      :title="$t('result.submitSuccess')"
+      :sub-title="$t('result.successDesc')"
     >
       <template #extra>
         <div class="flex">
-          <el-button type="primary">返回列表</el-button>
-          <el-button>查看项目</el-button>
-          <el-button>打印</el-button>
+          <el-button type="primary">{{ $t("result.backToList") }}</el-button>
+          <el-button>{{ $t("result.viewProject") }}</el-button>
+          <el-button>{{ $t("result.print") }}</el-button>
         </div>
       </template>
     </el-result>

@@ -8,10 +8,10 @@ defineOptions({
 
 <template>
   <div class="p-6">
-    <h2 class="text-2xl font-bold mb-4">预算管理</h2>
-    <p class="text-gray-500">设置和追踪您的预算</p>
+    <h2 class="text-2xl font-bold mb-4">{{ $t("pageContent.financeBudget") }}</h2>
+    <p class="text-gray-500">{{ $t("pageContent.financeBudgetDesc") }}</p>
     <div class="mt-4 p-4 bg-white rounded-lg shadow">
-      <p class="text-gray-600">预算管理功能开发中...</p>
+      <p class="text-gray-600">{{ $t("pageContent.financeBudgetInDev") }}</p>
     </div>
   </div>
 </template>

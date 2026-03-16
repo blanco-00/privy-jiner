@@ -137,7 +137,7 @@ watch(loginDay, value => {
         />
         <template #dropdown>
           <el-dropdown-menu class="translation">
-            <el-dropdown-item
+              <el-dropdown-item
               :style="getDropdownItemStyle(locale, 'zh')"
               :class="['dark:text-white!', getDropdownItemClass(locale, 'zh')]"
               @click="translationCh"
@@ -147,7 +147,7 @@ watch(loginDay, value => {
                 class="check-zh"
                 :icon="Check"
               />
-              简体中文
+              {{ $t("login.zhCN") }}
             </el-dropdown-item>
             <el-dropdown-item
               :style="getDropdownItemStyle(locale, 'en')"

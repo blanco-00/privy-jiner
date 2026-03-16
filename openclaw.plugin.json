@@ -2,9 +2,22 @@
   "id": "privy-jiner",
   "name": "Privy-Jiner Personal Assistant",
   "version": "1.0.0",
-  "description": "Personal AI assistant with finance, health, fashion, knowledge, and news modules",
+  "description": "Personal AI assistant with finance, health, fashion, knowledge, and news modules. Say natural language like 'I drank 500ml of water' to log data.",
   "author": "Privy-Jiner Team",
   "entry": "dist/openclaw-plugin.js",
+  "type": "personal-assistant",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": { "type": "boolean" },
+      "jinerApiUrl": { "type": "string" }
+    }
+  },
+  "uiHints": {
+    "enabled": { "label": "Enabled" },
+    "jinerApiUrl": { "label": "Jiner API URL", "default": "http://localhost:3001" }
+  },
   "dependencies": {},
   "capabilities": [
     "finance_record",
@@ -16,6 +29,24 @@
     "fashion_add_item",
     "fashion_log_outfit",
     "fashion_recommend"
+  ],
+  "tools": [
+    {
+      "name": "jiner_nlu",
+      "description": "Process natural language requests for health, finance, and fashion data. Use when user mentions: water, drink, exercise, run, walk, spent, bought, paid, expense, etc.",
+      "endpoint": "http://localhost:3001/api/ai/nlu",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": {
+        "message": {
+          "type": "string",
+          "description": "The natural language message from user",
+          "required": true
+        }
+      }
+    }
   ],
   "database": {
     "mode": "shared",

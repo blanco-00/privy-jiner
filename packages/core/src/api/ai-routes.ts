@@ -30,39 +30,66 @@ export function createAIRouter(aiService: AIService, healthService?: HealthServi
         const tools = [
           {
             name: 'health_log_water',
-            description: 'Log water intake in milliliters. Use when user says they drank water.',
-            keywords: ['water', 'drank', 'drink', 'cups', 'glasses', 'ml'],
+            description: 'Log water intake in milliliters',
+            params: {
+              type: 'object',
+              properties: {
+                amount: { type: 'integer', description: 'Amount in ml (e.g., 200, 500)' },
+                date: { type: 'string', description: 'Date in YYYY-MM-DD format (optional, defaults to today)' }
+              },
+              required: ['amount']
+            }
           },
           {
             name: 'health_log_exercise',
-            description: 'Log exercise activity. Use when user mentions exercise, running, walking, etc.',
-            keywords: ['exercise', 'run', 'walk', 'workout', 'gym', 'yoga', 'swim', 'minutes'],
+            description: 'Log exercise activity',
+            params: {
+              type: 'object',
+              properties: {
+                activity: { type: 'string', description: 'Activity type (e.g., run, walk, gym)' },
+                duration: { type: 'integer', description: 'Duration in minutes' },
+                date: { type: 'string', description: 'Date in YYYY-MM-DD format (optional)' }
+              },
+              required: ['activity', 'duration']
+            }
           },
           {
             name: 'finance_record_expense',
-            description: 'Record an expense. Use when user mentions spending money or buying something.',
-            keywords: ['spent', 'bought', 'paid', 'expense', 'cost', 'money'],
+            description: 'Record an expense',
+            params: {
+              type: 'object',
+              properties: {
+                amount: { type: 'number', description: 'Amount in CNY (元)' },
+                category: { type: 'string', description: 'Expense category (optional)' },
+                date: { type: 'string', description: 'Date in YYYY-MM-DD format (optional)' }
+              },
+              required: ['amount']
+            }
           },
         ];
 
-        const prompt = `You are an intent parser for a personal assistant.
+        const prompt = `You are an intent parser. Parse user message and output valid JSON matching the tool's params schema.
 
 User message: "${message}"
 
-Determine which action to take. Respond in JSON format:
+Output JSON format:
 {
   "tool": "tool_name" or null,
-  "args": {"param1": "value1"},
-  "confidence": 0.0-1.0,
-  "reasoning": "explanation"
+  "params": { /* exact params as defined in schema, use number/integer types */ }
 }
 
-Available tools:
-${tools.map(t => `- ${t.name}: ${t.description} (keywords: ${t.keywords.join(', ')})`).join('\n')}
+Tools and their required params:
+${tools.map(t => `
+- ${t.name}: ${t.description}
+  params: ${JSON.stringify(t.params.properties)}
+  required: ${t.params.required.join(', ')}
+`).join('\n')}
 
-For water: extract amount in ml (1 glass = 250ml, 1 cup = 250ml).
-For exercise: extract activity type and duration in minutes.
-For expense: extract amount and category if mentioned.`;
+IMPORTANT: 
+- amount must be a number (e.g., 200, not "200ml" or "200ml")
+- duration must be a number in minutes
+- activity must be a string
+- Output ONLY valid JSON, no explanation`;
 
         let apiUrl: string;
         let headers: Record<string, string>;
@@ -166,7 +193,8 @@ For expense: extract amount and category if mentioned.`;
           parsed = null;
         }
 
-        if (!parsed || !parsed.tool || parsed.confidence < 0.7) {
+        if (!parsed || !parsed.tool || !parsed.params) {
+          console.log('[AI /nlu] Intent parsed: tool=', parsed?.tool || null);
           res.json({
             success: false,
             message: 'Could not understand the request. Try being more specific.',
@@ -175,13 +203,23 @@ For expense: extract amount and category if mentioned.`;
           return;
         }
 
+        console.log(`[AI /nlu] Intent parsed: tool=${parsed.tool}, params=${JSON.stringify(parsed.params)}`);
+
         let result;
         const toolName = parsed.tool;
-        const args = parsed.args || {};
+        const params = parsed.params || {};
 
         if (toolName === 'health_log_water' && healthService) {
-          const amount = parseInt(args.amount) || 250;
-          const date = args.date || new Date().toISOString().split('T')[0];
+          const amount = params.amount;
+          if (!amount || typeof amount !== 'number' || amount <= 0) {
+            res.json({
+              success: false,
+              message: 'Could not understand the amount. Try being more specific like "200" or "500".',
+              tool: toolName,
+            });
+            return;
+          }
+          const date = params.date || new Date().toISOString().split('T')[0];
           console.log('[AI /nlu] Logging water:', { amount, date });
           result = healthService.logWater(amount, date);
           res.json({
@@ -191,9 +229,17 @@ For expense: extract amount and category if mentioned.`;
             result,
           });
         } else if (toolName === 'health_log_exercise' && healthService) {
-          const activity = args.activity || 'exercise';
-          const duration = parseInt(args.duration) || 30;
-          const date = args.date || new Date().toISOString().split('T')[0];
+          const activity = params.activity || 'exercise';
+          const duration = params.duration;
+          if (!duration || typeof duration !== 'number' || duration <= 0) {
+            res.json({
+              success: false,
+              message: 'Could not understand the duration. Try being more specific like "30".',
+              tool: toolName,
+            });
+            return;
+          }
+          const date = params.date || new Date().toISOString().split('T')[0];
           console.log('[AI /nlu] Logging exercise:', { activity, duration, date });
           result = healthService.logExercise({
             type: activity,
@@ -207,13 +253,22 @@ For expense: extract amount and category if mentioned.`;
             result,
           });
         } else if ((toolName === 'finance_record_expense' || toolName === 'finance_record') && financeService) {
-          const amount = parseFloat(args.amount) || 0;
+          const amount = params.amount;
+          if (!amount || typeof amount !== 'number' || amount <= 0) {
+            res.json({
+              success: false,
+              message: 'Could not understand the amount. Try being more specific like "100" or "50".',
+              tool: toolName,
+            });
+            return;
+          }
+          console.log('[AI /nlu] Logging expense:', { amount, category: params.category });
           result = financeService.createTransaction({
             amount,
             type: 'expense',
             category_id: null,
-            description: args.category || args.description || null,
-            date: args.date || new Date().toISOString().split('T')[0],
+            description: params.category || null,
+            date: params.date || new Date().toISOString().split('T')[0],
           });
           res.json({
             success: true,

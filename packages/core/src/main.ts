@@ -2,7 +2,6 @@ import { ConfigManager } from './config/index.js';
 import { DatabaseManager } from './database/index.js';
 import { Logger } from './logger/index.js';
 import { AgentCoordinator } from './agent/index.js';
-import { TaskManager } from './task/index.js';
 import { MemoryManager } from './memory/index.js';
 import { EventBus } from './event-bus/index.js';
 import { PluginManager } from './plugin/index.js';
@@ -46,7 +45,6 @@ export class PrivyJiner {
   private databaseManager: DatabaseManager;
   private logger: Logger;
   private agentCoordinator: AgentCoordinator;
-  private taskManager: TaskManager;
   private memoryManager: MemoryManager;
   private eventBus: EventBus;
   private pluginManager: PluginManager;
@@ -92,7 +90,6 @@ export class PrivyJiner {
     this.monitoringService = new MonitoringService(db);
 
     this.agentCoordinator = new AgentCoordinator();
-    this.taskManager = new TaskManager(db);
     this.memoryManager = new MemoryManager(db);
     this.eventBus = new EventBus();
     this.pluginManager = new PluginManager(options.pluginDirectory);
@@ -112,7 +109,7 @@ export class PrivyJiner {
     this.apiServer.getApp().use('/api/contacts', createContactsRouter(this.contactsService));
     this.apiServer.getApp().use('/api/schedules', createScheduleRouter(this.scheduleService));
     this.apiServer.getApp().use('/api/tasks', createTasksRouter(this.tasksService));
-    this.apiServer.getApp().use('/api/ai', createAIRouter(this.aiService));
+    this.apiServer.getApp().use('/api/ai', createAIRouter(this.aiService, this.healthService, this.financeService));
     this.apiServer.getApp().use('/api/monitoring', createMonitoringRouter(this.monitoringService));
 
     this.setupEventHandlers();
@@ -183,10 +180,6 @@ export class PrivyJiner {
 
   getAgentCoordinator(): AgentCoordinator {
     return this.agentCoordinator;
-  }
-
-  getTaskManager(): TaskManager {
-    return this.taskManager;
   }
 
   getMemoryManager(): MemoryManager {

@@ -8,10 +8,10 @@ defineOptions({
 
 <template>
   <div class="p-6">
-    <h2 class="text-2xl font-bold mb-4">收支记录</h2>
-    <p class="text-gray-500">管理您的收入和支出记录</p>
+    <h2 class="text-2xl font-bold mb-4">{{ $t("pageContent.financeRecords") }}</h2>
+    <p class="text-gray-500">{{ $t("pageContent.financeRecordsDesc") }}</p>
   <div class="mt-4 p-4 bg-white rounded-lg shadow">
-      <p class="text-gray-600">收支记录功能开发中...</p>
+      <p class="text-gray-600">{{ $t("pageContent.financeRecordsInDev") }}</p>
     </div>
   </div>
 </template>

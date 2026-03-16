@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useDark, useECharts } from "@pureadmin/utils";
 import { type PropType, ref, computed, watch, nextTick } from "vue";
+import { $t } from "@/plugins/i18n";
 
 const props = defineProps({
   requireData: {
@@ -22,10 +23,20 @@ const { setOptions } = useECharts(chartRef, {
   theme
 });
 
+const weekDays = computed(() => [
+  $t("weekday.sunday"),
+  $t("weekday.monday"),
+  $t("weekday.tuesday"),
+  $t("weekday.wednesday"),
+  $t("weekday.thursday"),
+  $t("weekday.friday"),
+  $t("weekday.saturday")
+]);
+
 watch(
   () => props,
   async () => {
-    await nextTick(); // 确保DOM更新完成后再执行
+    await nextTick();
     setOptions({
       container: ".bar-card",
       color: ["#41b6ff", "#e85f33"],
@@ -41,7 +52,7 @@ watch(
         right: 0
       },
       legend: {
-        data: ["需求人数", "提问数量"],
+        data: [$t("welcome.requiredNumber"), $t("welcome.questionCount")],
         textStyle: {
           color: "#606266",
           fontSize: "0.875rem"
@@ -51,7 +62,7 @@ watch(
       xAxis: [
         {
           type: "category",
-          data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+          data: weekDays.value,
           axisLabel: {
             fontSize: "0.875rem"
           },
@@ -67,14 +78,13 @@ watch(
             fontSize: "0.875rem"
           },
           splitLine: {
-            show: false // 去网格线
+            show: false
           }
-          // name: "单位: 个"
         }
       ],
       series: [
         {
-          name: "需求人数",
+          name: $t("welcome.requiredNumber"),
           type: "bar",
           barWidth: 10,
           itemStyle: {
@@ -84,7 +94,7 @@ watch(
           data: props.requireData
         },
         {
-          name: "提问数量",
+          name: $t("welcome.questionCount"),
           type: "bar",
           barWidth: 10,
           itemStyle: {

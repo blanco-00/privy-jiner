@@ -1,7 +1,11 @@
 import { EventEmitter } from 'events';
+import Database from 'better-sqlite3';
 import { ConfigManager, DeploymentMode, Config } from '../config/index.js';
 import { Logger } from '../logger/index.js';
 import { PluginInstance } from '../plugin/index.js';
+import { HealthService } from '../modules/health/index.js';
+import { FinanceService } from '../modules/finance/index.js';
+import { FashionService } from '../modules/fashion/index.js';
 
 export interface GatewayMessage {
   id: string;
@@ -9,6 +13,7 @@ export interface GatewayMessage {
   action: string;
   payload?: unknown;
   correlationId?: string;
+  naturalLanguage?: string;
 }
 
 export interface GatewayTool {
@@ -33,6 +38,14 @@ export class OpenClawPlugin implements PluginInstance {
   private mode: DeploymentMode = 'plugin';
   private gatewayDatabase?: unknown;
   private pluginSecret?: string;
+  private nlEnabled = true;
+  private nluParser?: (input: string) => Promise<{ tool: string; args: Record<string, unknown>; error?: string }>;
+
+  // Managers for business logic
+  private db?: Database.Database;
+  private healthService?: HealthService;
+  private financeService?: FinanceService;
+  private fashionService?: FashionService;
 
   constructor() {
     this.configManager = new ConfigManager();
@@ -40,13 +53,108 @@ export class OpenClawPlugin implements PluginInstance {
     this.pluginSecret = process.env.OPENCLOW_PLUGIN_SECRET;
   }
 
+  /**
+   * Set managers for business logic execution
+   * Call this after initializing the plugin with database
+   */
+  setManagers(managers: {
+    db: Database.Database;
+    healthService: HealthService;
+    financeService: FinanceService;
+    fashionService: FashionService;
+  }): void {
+    this.db = managers.db;
+    this.healthService = managers.healthService;
+    this.financeService = managers.financeService;
+    this.fashionService = managers.fashionService;
+    this.logger.info('Managers set for OpenClawPlugin');
+  }
+
+  /**
+   * Initialize managers from a database path (standalone mode)
+   */
+  async initializeWithDatabase(dbPath: string): Promise<void> {
+    this.db = new Database(dbPath);
+    this.healthService = new HealthService(this.db);
+    this.financeService = new FinanceService(this.db);
+    this.fashionService = new FashionService(this.db);
+    this.logger.info(`Initialized managers with database: ${dbPath}`);
+  }
+
+  setNLUParser(parser: (input: string) => Promise<{ tool: string; args: Record<string, unknown>; error?: string }>): void {
+    this.nluParser = parser;
+  }
+
+  setNLEnabled(enabled: boolean): void {
+    this.nlEnabled = enabled;
+  }
+
+  isNLEnabled(): boolean {
+    return this.nlEnabled;
+  }
+
   async onLoad(): Promise<void> {
     this.logger.info('Privy-Jiner OpenClaw plugin loading...');
-    this.logger.info('Plugin mode: using Gateway database, no local DB init');
     
+    // Try to initialize with default database path
+    const dbPath = process.cwd() + '/data/privy-jiner.db';
+    try {
+      this.db = new Database(dbPath);
+      this.healthService = new HealthService(this.db);
+      this.financeService = new FinanceService(this.db);
+      this.fashionService = new FashionService(this.db);
+      this.logger.info(`Initialized managers with database: ${dbPath}`);
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Could not initialize database at ${dbPath}: ${errMsg}`);
+      this.logger.warn('Plugin will work but tools require manual initialization via setManagers()');
+    }
+
     if (!this.pluginSecret) {
       this.logger.warn('OPENCLOW_PLUGIN_SECRET not set - auth disabled');
     }
+
+    await this.discoverCapabilities();
+  }
+
+  private async discoverCapabilities(): Promise<void> {
+    this.logger.info('[Jiner Plugin] === Capability Discovery Start ===');
+    try {
+      const tools = this.getTools();
+      this.logger.info(`[Jiner Plugin] Found ${tools.length} tools in plugin`);
+
+      const capabilities = this.getCapabilitiesWithDetails();
+      const discovered = capabilities.map(c => c.name).join(', ');
+      this.logger.info(`[Jiner Plugin] Discovered capabilities: ${discovered}`);
+      this.logger.info('[Jiner Plugin] === Capability Discovery Complete ===');
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`[Jiner Plugin] ERROR: Failed to discover capabilities: ${errMsg}`);
+      this.logger.info('[Jiner Plugin] === Capability Discovery Complete (with errors) ===');
+    }
+  }
+
+  getCapabilitiesWithDetails(): Array<{ name: string; description: string; keywords: string[]; endpoint: string }> {
+    return [
+      {
+        name: 'health_log_water',
+        description: 'Log water intake in milliliters',
+        keywords: ['water', 'drank', 'drink', 'ml', '喝水'],
+        endpoint: 'http://localhost:3001/api/ai/nlu',
+      },
+      {
+        name: 'health_log_exercise',
+        description: 'Log exercise activity',
+        keywords: ['exercise', 'run', 'walk', '运动', '跑步', '分钟'],
+        endpoint: 'http://localhost:3001/api/ai/nlu',
+      },
+      {
+        name: 'finance_record_expense',
+        description: 'Record an expense',
+        keywords: ['spent', 'bought', 'expense', '花了', '支出', '钱'],
+        endpoint: 'http://localhost:3001/api/ai/nlu',
+      },
+    ];
   }
 
   async onUnload(): Promise<void> {
@@ -54,7 +162,11 @@ export class OpenClawPlugin implements PluginInstance {
     if (this.gatewayConnection) {
       await this.gatewayConnection.disconnect();
     }
-    this.logger.info('Privy-Jiner OpenClaw plugin unloaded');
+    if (this.db) {
+      this.db.close();
+      this.logger.info('Database connection closed');
+    }
+    this.logger.info('Privy-Jiner plugin unloaded');
   }
 
   verifyPluginSecret(secret: string): boolean {
@@ -84,7 +196,7 @@ export class OpenClawPlugin implements PluginInstance {
 
   async registerWithGateway(gateway: GatewayConnection): Promise<GatewayRegistration> {
     this.gatewayConnection = gateway;
-    
+
     const registration: GatewayRegistration = {
       pluginId: 'privy-jiner',
       name: 'Privy-Jiner Personal Assistant',
@@ -92,7 +204,7 @@ export class OpenClawPlugin implements PluginInstance {
       capabilities: this.getCapabilities(),
       tools: this.getTools(),
     };
-    
+
     await gateway.register(registration);
     this.logger.info('Registered with OpenClaw Gateway');
     return registration;
@@ -101,7 +213,7 @@ export class OpenClawPlugin implements PluginInstance {
   private getCapabilities(): string[] {
     return [
       'finance_record',
-      'finance_query', 
+      'finance_query',
       'finance_report',
       'health_log_water',
       'health_log_exercise',
@@ -113,6 +225,8 @@ export class OpenClawPlugin implements PluginInstance {
   }
 
   getTools(): GatewayTool[] {
+    const self = this;
+
     return [
       {
         name: 'finance_record',
@@ -128,8 +242,19 @@ export class OpenClawPlugin implements PluginInstance {
           },
           required: ['type', 'amount', 'category'],
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'finance_record', args };
+        handler: async (args: unknown) => {
+          const payload = args as { type: 'income' | 'expense'; amount: number; category?: string; description?: string; date?: string };
+          if (!self.financeService) {
+            throw new Error('FinanceService not initialized');
+          }
+          const record = self.financeService.createTransaction({
+            category_id: null,
+            amount: payload.amount,
+            type: payload.type,
+            description: payload.description || null,
+            date: payload.date || new Date().toISOString().split('T')[0],
+          });
+          return { success: true, action: 'finance_record', data: record };
         },
       },
       {
@@ -145,8 +270,12 @@ export class OpenClawPlugin implements PluginInstance {
             limit: { type: 'number' },
           },
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'finance_query', args };
+        handler: async (_args: unknown) => {
+          if (!self.financeService) {
+            throw new Error('FinanceService not initialized');
+          }
+          const transactions = self.financeService.getTransactions({});
+          return { success: true, action: 'finance_query', data: transactions };
         },
       },
       {
@@ -160,8 +289,12 @@ export class OpenClawPlugin implements PluginInstance {
           },
           required: ['startDate', 'endDate'],
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'finance_report', args };
+        handler: async (_args: unknown) => {
+          if (!self.financeService) {
+            throw new Error('FinanceService not initialized');
+          }
+          const summary = self.financeService.getSummary();
+          return { success: true, action: 'finance_report', data: summary };
         },
       },
       {
@@ -175,8 +308,14 @@ export class OpenClawPlugin implements PluginInstance {
           },
           required: ['amount'],
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'health_log_water', args };
+        handler: async (args: unknown) => {
+          const payload = args as { amount: number; date?: string };
+          if (!self.healthService) {
+            throw new Error('HealthService not initialized');
+          }
+          const today = payload.date || new Date().toISOString().split('T')[0];
+          const waterLog = self.healthService.logWater(payload.amount, today);
+          return { success: true, action: 'health_log_water', data: waterLog };
         },
       },
       {
@@ -191,8 +330,18 @@ export class OpenClawPlugin implements PluginInstance {
           },
           required: ['activity', 'duration'],
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'health_log_exercise', args };
+        handler: async (args: unknown) => {
+          const payload = args as { activity: string; duration: number; date?: string };
+          if (!self.healthService) {
+            throw new Error('HealthService not initialized');
+          }
+          const today = payload.date || new Date().toISOString().split('T')[0];
+          const exerciseLog = self.healthService.logExercise({
+            type: payload.activity,
+            duration: payload.duration,
+            date: today,
+          });
+          return { success: true, action: 'health_log_exercise', data: exerciseLog };
         },
       },
       {
@@ -206,8 +355,26 @@ export class OpenClawPlugin implements PluginInstance {
             endDate: { type: 'string' },
           },
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'health_query', args };
+        handler: async (args: unknown) => {
+          const payload = args as { type: 'water' | 'exercise'; startDate?: string; endDate?: string };
+          if (!self.healthService) {
+            throw new Error('HealthService not initialized');
+          }
+
+          let data;
+          if (payload.type === 'water') {
+            const today = new Date().toISOString().split('T')[0];
+            const logs = self.healthService.getWaterLogs(today);
+            const total = self.healthService.getTodayWaterTotal();
+            data = { todayTotal: total, logs };
+          } else {
+            const today = new Date().toISOString().split('T')[0];
+            const logs = self.healthService.getExerciseLogs(today);
+            const summary = self.healthService.getTodayExerciseSummary();
+            data = { summary, logs };
+          }
+
+          return { success: true, action: 'health_query', data };
         },
       },
       {
@@ -217,15 +384,28 @@ export class OpenClawPlugin implements PluginInstance {
           type: 'object',
           properties: {
             name: { type: 'string' },
-            category: { type: 'string' },
+            category: { type: 'string', enum: ['top', 'bottom', 'dress', 'shoes', 'accessory', 'outerwear', 'other'] },
             color: { type: 'string' },
-            season: { type: 'array', items: { type: 'string' } },
+            brand: { type: 'string' },
             favorite: { type: 'boolean' },
           },
           required: ['name', 'category'],
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'fashion_add_item', args };
+        handler: async (args: unknown) => {
+          const payload = args as { name: string; category: 'top' | 'bottom' | 'dress' | 'shoes' | 'accessory' | 'outerwear' | 'other'; color?: string; brand?: string };
+          if (!self.fashionService) {
+            throw new Error('FashionService not initialized');
+          }
+          const item = self.fashionService.createItem({
+            name: payload.name,
+            category: payload.category,
+            color: payload.color || null,
+            brand: payload.brand || null,
+            purchase_date: null,
+            purchase_price: null,
+            notes: null,
+          });
+          return { success: true, action: 'fashion_add_item', data: item };
         },
       },
       {
@@ -236,13 +416,23 @@ export class OpenClawPlugin implements PluginInstance {
           properties: {
             name: { type: 'string' },
             items: { type: 'array', items: { type: 'string' } },
-            rating: { type: 'number' },
-            date: { type: 'string' },
+            occasion: { type: 'string' },
+            weather: { type: 'string' },
           },
           required: ['name', 'items'],
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'fashion_log_outfit', args };
+        handler: async (args: unknown) => {
+          const payload = args as { name: string; items: string[]; occasion?: string; weather?: string };
+          if (!self.fashionService) {
+            throw new Error('FashionService not initialized');
+          }
+          const today = new Date().toISOString().split('T')[0];
+          const outfit = self.fashionService.logOutfit({
+            date: today,
+            occasion: payload.occasion as 'casual' | 'work' | 'formal' | 'sport' | 'special' | undefined,
+            itemIds: payload.items,
+          });
+          return { success: true, action: 'fashion_log_outfit', data: outfit };
         },
       },
       {
@@ -255,22 +445,71 @@ export class OpenClawPlugin implements PluginInstance {
             season: { type: 'string' },
           },
         },
-        handler: async (...args: unknown[]) => {
-          return { success: true, action: 'fashion_recommend', args };
+        handler: async (_args: unknown) => {
+          if (!self.fashionService) {
+            throw new Error('FashionService not initialized');
+          }
+          // Get recent outfits
+          const outfits = self.fashionService.getOutfits();
+          return { success: true, action: 'fashion_recommend', data: outfits };
         },
       },
     ];
   }
 
+  private isNaturalLanguage(message: GatewayMessage): boolean {
+    return !!message.naturalLanguage && message.naturalLanguage.length > 0;
+  }
+
   async handleGatewayMessage(message: GatewayMessage): Promise<unknown> {
-    const { action, payload } = message;
+    const { action, payload, naturalLanguage } = message;
     this.logger.debug(`Handling Gateway message: ${action}`);
+
+    if (this.isNaturalLanguage(message)) {
+      return this.handleNaturalLanguage(naturalLanguage!);
+    }
+
     const tools = this.getTools();
     const tool = tools.find(t => t.name === action);
     if (!tool) {
       throw new Error(`Unknown action: ${action}`);
     }
     return tool.handler(payload || {});
+  }
+
+  private async handleNaturalLanguage(input: string): Promise<unknown> {
+    if (!this.nlEnabled) {
+      return { success: false, error: 'Natural language processing is disabled' };
+    }
+
+    if (!this.nluParser) {
+      return { success: false, error: 'NLU parser not configured' };
+    }
+
+    this.logger.info(`Processing NL request: ${input}`);
+
+    try {
+      const parsed = await this.nluParser(input);
+
+      if (!parsed.tool) {
+        return { success: false, error: parsed.error || 'Could not understand the request' };
+      }
+
+      const tools = this.getTools();
+      const tool = tools.find(t => t.name === parsed.tool);
+      if (!tool) {
+        return { success: false, error: `Unknown tool: ${parsed.tool}` };
+      }
+
+      this.logger.info(`Executing tool: ${parsed.tool} with args:`, parsed.args);
+      const result = await tool.handler(parsed.args);
+
+      return { success: true, result, parsed };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`NL processing error: ${errorMessage}`);
+      return { success: false, error: errorMessage };
+    }
   }
 
   loadConfigFromGateway(gatewayConfig: Partial<Config>): void {
@@ -293,6 +532,19 @@ export class OpenClawPlugin implements PluginInstance {
 
   setMode(mode: DeploymentMode): void {
     this.mode = mode;
+  }
+
+  // Expose managers for testing
+  getHealthService(): HealthService | undefined {
+    return this.healthService;
+  }
+
+  getFinanceService(): FinanceService | undefined {
+    return this.financeService;
+  }
+
+  getFashionService(): FashionService | undefined {
+    return this.fashionService;
   }
 }
 
@@ -396,4 +648,28 @@ export const tools = {
   fashion_recommend: async (...args: unknown[]) => ({ success: true, action: 'fashion_recommend', args }),
 };
 
+const openclawPlugin = {
+  id: 'privy-jiner',
+  name: 'Privy-Jiner Personal Assistant',
+  description: 'Personal AI assistant with finance, health, fashion modules',
+  configSchema: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      enabled: { type: 'boolean' },
+      jinerApiUrl: { type: 'string' },
+    },
+  },
+  async onLoad() {
+    console.log('[Jiner Plugin] Loaded successfully');
+  },
+  async onUnload() {
+    console.log('[Jiner Plugin] Unloaded');
+  },
+  getTools() {
+    return [];
+  },
+};
+
 export default OpenClawPlugin;
+export { openclawPlugin };

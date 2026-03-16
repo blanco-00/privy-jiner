@@ -8,10 +8,10 @@ defineOptions({
 
 <template>
   <div class="p-6">
-    <h2 class="text-2xl font-bold mb-4">推荐系统</h2>
-    <p class="text-gray-500">个性化新闻推荐</p>
+    <h2 class="text-2xl font-bold mb-4">{{ $t("pageContent.newsRecommendations") }}</h2>
+    <p class="text-gray-500">{{ $t("pageContent.newsRecommendationsDesc") }}</p>
     <div class="mt-4 p-4 bg-white rounded-lg shadow">
-      <p class="text-gray-600">推荐系统功能开发中...</p>
+      <p class="text-gray-600">{{ $t("pageContent.newsRecommendationsInDev") }}</p>
     </div>
   </div>
 </template>
