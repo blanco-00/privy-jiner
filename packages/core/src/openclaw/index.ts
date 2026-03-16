@@ -671,5 +671,222 @@ const openclawPlugin = {
   },
 };
 
-export default OpenClawPlugin;
+export default function openclawPluginEntrypoint(api: {
+  registerTool: (tool: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+    execute: (id: string, params: unknown) => Promise<unknown>;
+  }, options?: { optional?: boolean }) => void;
+  registerHttpRoute?: (route: {
+    path: string;
+    auth: 'none' | 'plugin' | 'gateway';
+    match: 'exact' | 'prefix';
+    handler: (req: unknown, res: unknown) => Promise<boolean>;
+  }) => void;
+}) {
+  const JINER_API_URL = process.env.JINER_API_URL || 'http://localhost:3001';
+
+  async function callJinerAPI(message: string) {
+    try {
+      const response = await fetch(`${JINER_API_URL}/api/ai/nlu`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      return await response.json();
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  api.registerTool({
+    name: 'jiner_nlu',
+    description: 'Process natural language for health, finance, and fashion data. Use when user mentions: water, drink, exercise, spent, bought, paid, expense, outfit, clothes, etc.',
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'The natural language message from user' },
+      },
+      required: ['message'],
+    },
+    execute: async (_id, params) => {
+      const { message } = params as { message: string };
+      return await callJinerAPI(message);
+    },
+  });
+
+  api.registerTool({
+    name: 'health_log_water',
+    description: 'Log water intake in milliliters. Use when user says they drank water, e.g., "我喝了30ml水"',
+    parameters: {
+      type: 'object',
+      properties: {
+        amount: { type: 'number', description: 'Amount in milliliters' },
+        date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
+      },
+      required: ['amount'],
+    },
+    execute: async (_id, params) => {
+      const { amount, date } = params as { amount: number; date?: string };
+      const message = date 
+        ? `我喝了${amount}ml水，日期是${date}` 
+        : `我喝了${amount}ml水`;
+      return await callJinerAPI(message);
+    },
+  });
+
+  api.registerTool({
+    name: 'health_log_exercise',
+    description: 'Log exercise activity. Use when user mentions exercise, running, walking, etc.',
+    parameters: {
+      type: 'object',
+      properties: {
+        activity: { type: 'string', description: 'Type of exercise (running, walking, etc.)' },
+        duration: { type: 'number', description: 'Duration in minutes' },
+        date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
+      },
+      required: ['activity', 'duration'],
+    },
+    execute: async (_id, params) => {
+      const { activity, duration, date } = params as { activity: string; duration: number; date?: string };
+      const message = date 
+        ? `我做了${duration}分钟${activity}运动，日期是${date}` 
+        : `我做了${duration}分钟${activity}运动`;
+      return await callJinerAPI(message);
+    },
+  });
+
+  api.registerTool({
+    name: 'health_query',
+    description: 'Query health data including water intake and exercise logs',
+    parameters: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', enum: ['water', 'exercise'], description: 'Type of health data to query' },
+        startDate: { type: 'string', description: 'Start date in YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date in YYYY-MM-DD' },
+      },
+    },
+    execute: async (_id, params) => {
+      const { type, startDate, endDate } = params as { type?: string; startDate?: string; endDate?: string };
+      if (type === 'water') {
+        const response = await fetch(`${JINER_API_URL}/api/health/water`);
+        const data = await response.json();
+        const total = data.reduce((sum: number, item: { amount: number }) => sum + item.amount, 0);
+        return { success: true, data: { todayTotal: total, logs: data } };
+      }
+      return { success: true, data: { note: 'Query other health data via jiner API' } };
+    },
+  });
+
+  api.registerTool({
+    name: 'finance_record',
+    description: 'Record income or expense. Use when user mentions spending money, earning money, etc.',
+    parameters: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', enum: ['income', 'expense'], description: 'Type of transaction' },
+        amount: { type: 'number', description: 'Amount' },
+        category: { type: 'string', description: 'Category name' },
+        description: { type: 'string', description: 'Description' },
+        date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
+      },
+      required: ['type', 'amount'],
+    },
+    execute: async (_id, params) => {
+      const { type, amount, category, description, date } = params as { type: string; amount: number; category?: string; description?: string; date?: string };
+      const message = type === 'expense'
+        ? `我花了${amount}元${category ? '用于' + category : ''}${description ? '，' + description : ''}`
+        : `我收入了${amount}元${category ? '来自' + category : ''}`;
+      return await callJinerAPI(message);
+    },
+  });
+
+  api.registerTool({
+    name: 'finance_query',
+    description: 'Query finance records',
+    parameters: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', enum: ['income', 'expense'], description: 'Filter by type' },
+        category: { type: 'string', description: 'Filter by category' },
+        startDate: { type: 'string', description: 'Start date' },
+        endDate: { type: 'string', description: 'End date' },
+        limit: { type: 'number', description: 'Limit results' },
+      },
+    },
+    execute: async (_id, params) => {
+      return await callJinerAPI('查询我的财务记录');
+    },
+  });
+
+  api.registerTool({
+    name: 'finance_report',
+    description: 'Get finance summary report',
+    parameters: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date in YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date in YYYY-MM-DD' },
+      },
+    },
+    execute: async (_id, params) => {
+      return await callJinerAPI('查看财务报告');
+    },
+  });
+
+  api.registerTool({
+    name: 'fashion_add_item',
+    description: 'Add wardrobe item',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Item name' },
+        category: { type: 'string', enum: ['top', 'bottom', 'dress', 'shoes', 'accessory', 'outerwear', 'other'], description: 'Clothing category' },
+        color: { type: 'string', description: 'Color' },
+        brand: { type: 'string', description: 'Brand' },
+        favorite: { type: 'boolean', description: 'Mark as favorite' },
+      },
+      required: ['name', 'category'],
+    },
+    execute: async (_id, params) => {
+      return await callJinerAPI(`添加衣服：${JSON.stringify(params)}`);
+    },
+  });
+
+  api.registerTool({
+    name: 'fashion_log_outfit',
+    description: 'Log an outfit',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Outfit name' },
+        items: { type: 'array', items: { type: 'string' }, description: 'Item IDs' },
+        occasion: { type: 'string', description: 'Occasion (casual, work, formal, sport, special)' },
+        weather: { type: 'string', description: 'Weather condition' },
+      },
+      required: ['name', 'items'],
+    },
+    execute: async (_id, params) => {
+      return await callJinerAPI(`记录穿搭：${JSON.stringify(params)}`);
+    },
+  });
+
+  api.registerTool({
+    name: 'fashion_recommend',
+    description: 'Get outfit recommendations',
+    parameters: {
+      type: 'object',
+      properties: {
+        occasion: { type: 'string', description: 'Occasion' },
+        season: { type: 'string', description: 'Season' },
+      },
+    },
+    execute: async (_id, params) => {
+      return await callJinerAPI('给我穿搭推荐');
+    },
+  });
+}
+
 export { openclawPlugin };
