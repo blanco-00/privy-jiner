@@ -200,14 +200,26 @@ For expense: extract amount and category if mentioned.`;
 
   router.post('/config', async (req: Request, res: Response) => {
     try {
-      const { provider, api_key, base_url, model, temperature, max_tokens } = req.body;
+      // Accept both camelCase (apiKey, baseUrl) and snake_case (api_key, base_url)
+      const { provider, api_key, base_url, model, temperature, max_tokens, isNew } = req.body;
+      const apiKey = req.body.apiKey || api_key;
+      const baseUrl = req.body.baseUrl || base_url;
+      
       if (!provider) {
         res.status(400).json({ error: 'provider is required' });
         return;
       }
-      aiService.saveConfig({ provider, api_key, base_url, model, temperature, max_tokens });
-      const config = aiService.getConfigMasked();
-      res.json(config);
+      
+      const config = aiService.saveConfig({ 
+        provider, 
+        api_key: apiKey, 
+        base_url: baseUrl, 
+        model, 
+        temperature, 
+        max_tokens 
+      }, isNew);
+      
+      res.json({ code: 0, data: { id: config.id } });
     } catch (error) {
       console.error('Save AI config error:', error);
       res.status(500).json({ error: 'Failed to save AI config' });
@@ -377,6 +389,58 @@ For expense: extract amount and category if mentioned.`;
     } catch (error) {
       console.error('Get AI usage error:', error);
       res.status(500).json({ error: 'Failed to get AI usage stats' });
+    }
+  });
+
+  router.get('/configs', async (_req: Request, res: Response) => {
+    try {
+      const configs = aiService.getAllConfigs();
+      res.json({ code: 0, data: configs });
+    } catch (error) {
+      console.error('Get AI configs error:', error);
+      res.status(500).json({ error: 'Failed to get AI configs' });
+    }
+  });
+
+  router.delete('/configs/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const success = aiService.deleteConfig(id);
+      if (success) {
+        res.json({ code: 0, message: 'Config deleted successfully' });
+      } else {
+        res.status(404).json({ error: 'Config not found' });
+      }
+    } catch (error) {
+      console.error('Delete AI config error:', error);
+      res.status(500).json({ error: 'Failed to delete AI config' });
+    }
+  });
+
+  router.put('/configs/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { provider, api_key, base_url, model, temperature, max_tokens } = req.body;
+      const apiKey = req.body.apiKey || api_key;
+      const baseUrl = req.body.baseUrl || base_url;
+
+      const config = aiService.updateConfig(id, { 
+        provider, 
+        api_key: apiKey, 
+        base_url: baseUrl, 
+        model, 
+        temperature, 
+        max_tokens 
+      });
+      
+      if (config) {
+        res.json({ code: 0, data: config });
+      } else {
+        res.status(404).json({ error: 'Config not found' });
+      }
+    } catch (error) {
+      console.error('Update AI config error:', error);
+      res.status(500).json({ error: 'Failed to update AI config' });
     }
   });
 

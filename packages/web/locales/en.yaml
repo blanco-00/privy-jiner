@@ -200,6 +200,13 @@ tableBar:
 
 common:
   save: Save
+  cancel: Cancel
+  delete: Delete
+  edit: Edit
+  add: Add
+  confirm: Confirm
+  actions: Actions
+  load: Load
 
 aiConfigPage:
   title: AI Config
@@ -220,9 +227,15 @@ aiConfigPage:
   testConnection: Test Connection
   saveSuccess: Saved Successfully
   saveFailed: Save Failed
+  saveAsNew: Save as New
+  saveAsNewSuccess: Saved as New Configuration
   testSuccess: Connection Successful
   testFailed: Connection Failed
   apiKeyRequired: Please Enter API Key
+  savedConfigs: Saved Configurations
+  confirmDelete: Are you sure you want to delete this configuration?
+  deleteSuccess: Deleted Successfully
+  deleteFailed: Delete Failed
   nluSettings: Natural Language Settings
   nlEnabled: Enable Natural Language
   nlExamples: Examples

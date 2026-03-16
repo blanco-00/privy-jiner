@@ -70,8 +70,8 @@ export class AIService {
     return config;
   }
 
-  saveConfig(data: { provider: string; api_key?: string; base_url?: string; model?: string; temperature?: number; max_tokens?: number }): AIConfig {
-    const existing = this.getConfigMasked();
+  saveConfig(data: { provider: string; api_key?: string; base_url?: string; model?: string; temperature?: number; max_tokens?: number }, isNew?: boolean): AIConfig {
+    const existing = !isNew ? this.getConfigMasked() : null;
     const now = new Date().toISOString();
 
     if (existing) {
@@ -94,7 +94,7 @@ export class AIService {
       this.db.prepare(`
         INSERT INTO ai_config (id, provider, api_key, base_url, model, temperature, max_tokens, is_active, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
-      `).run(id, data.provider, data.api_key || null, data.base_url || null, data.model || null, data.temperature || 0.7, data.max_tokens || 2048, now, now);
+      `).run(id, data.provider, data.api_key ? encryptApiKey(data.api_key) : null, data.base_url || null, data.model || null, data.temperature || 0.7, data.max_tokens || 2048, now, now);
     }
 
     return this.getConfig()!;
@@ -173,5 +173,40 @@ export class AIService {
     `).get(sinceStr) as { total_calls: number; total_tokens: number; total_cost: number };
 
     return { totalCalls: stats.total_calls, totalTokens: stats.total_tokens, totalCost: stats.total_cost };
+  }
+
+  getAllConfigs(): AIConfig[] {
+    const configs = this.db.prepare('SELECT * FROM ai_config ORDER BY created_at DESC').all() as AIConfig[];
+    return configs.map(config => ({
+      ...config,
+      api_key: config.api_key ? '********' : null
+    }));
+  }
+
+  deleteConfig(id: string): boolean {
+    const result = this.db.prepare('DELETE FROM ai_config WHERE id = ?').run(id);
+    return result.changes > 0;
+  }
+
+  updateConfig(id: string, data: { provider?: string; api_key?: string; base_url?: string; model?: string; temperature?: number; max_tokens?: number }): AIConfig | null {
+    const existing = this.db.prepare('SELECT * FROM ai_config WHERE id = ?').get(id) as AIConfig | undefined;
+    if (!existing) {
+      return null;
+    }
+
+    const fields: string[] = ['updated_at = ?'];
+    const values: any[] = [new Date().toISOString()];
+
+    if (data.provider !== undefined) { fields.push('provider = ?'); values.push(data.provider); }
+    if (data.api_key !== undefined) { fields.push('api_key = ?'); values.push(data.api_key ? encryptApiKey(data.api_key) : null); }
+    if (data.base_url !== undefined) { fields.push('base_url = ?'); values.push(data.base_url || null); }
+    if (data.model !== undefined) { fields.push('model = ?'); values.push(data.model || null); }
+    if (data.temperature !== undefined) { fields.push('temperature = ?'); values.push(data.temperature); }
+    if (data.max_tokens !== undefined) { fields.push('max_tokens = ?'); values.push(data.max_tokens); }
+
+    values.push(id);
+    this.db.prepare(`UPDATE ai_config SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+
+    return this.getConfigMasked();
   }
 }

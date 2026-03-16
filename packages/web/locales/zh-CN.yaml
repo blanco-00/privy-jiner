@@ -221,6 +221,13 @@ tableBar:
 
 common:
   save: 保存
+  cancel: 取消
+  delete: 删除
+  edit: 编辑
+  add: 添加
+  confirm: 确认
+  actions: 操作
+  load: 加载
 
 aiConfigPage:
   title: AI 配置
@@ -241,9 +248,15 @@ aiConfigPage:
   testConnection: 测试连接
   saveSuccess: 保存成功
   saveFailed: 保存失败
+  saveAsNew: 另存为新配置
+  saveAsNewSuccess: 已保存为新配置
   testSuccess: 连接成功
   testFailed: 连接失败
   apiKeyRequired: 请输入 API Key
+  savedConfigs: 已保存的配置
+  confirmDelete: 确定要删除此配置吗？
+  deleteSuccess: 删除成功
+  deleteFailed: 删除失败
   nluSettings: 自然语言设置
   nlEnabled: 启用自然语言
   nlExamples: 使用示例
