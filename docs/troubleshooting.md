@@ -217,7 +217,7 @@ Update `cors` configuration in `config/server.json`:
 {
   "cors": {
     "enabled": true,
-    "origins": ["http://localhost:3000"]
+    "origins": ["http://localhost:3001"]
   }
 }
 ```

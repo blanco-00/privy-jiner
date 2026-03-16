@@ -63,7 +63,7 @@ npm run dev
 docker build -t privy-jiner .
 
 # Run the container
-docker run -d -p 3000:3000 privy-jiner
+docker run -d -p 3001:3001 privy-jiner
 ```
 
 ---
@@ -82,7 +82,7 @@ The default configuration file is located at:
 {
   "deployment": {
     "mode": "standalone",
-    "port": 3000,
+    "port": 3001,
     "host": "0.0.0.0"
   },
   "database": {
@@ -246,7 +246,7 @@ Run Privy-Jiner as an independent service with its own Web Dashboard.
 npm run dev
 ```
 
-Access the dashboard at `http://localhost:3000`
+Access the dashboard at `http://localhost:3001`
 
 ### OpenClaw Plugin Mode
 

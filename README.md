@@ -29,39 +29,37 @@ Privy-Jiner is an open-source personal AI assistant system designed for individu
 ### Quick Start
 
 ```bash
-# Clone the repository
+# Clone and start (recommended)
 git clone https://github.com/blanco-00/privy-jiner.git
 cd privy-jiner
-
-# One-click start (recommended for OpenClaw integration)
 ./start-jiner.sh
-```
 
-Or manually:
-
-```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run in standalone mode
-npm run dev
+# Configure AI (copy .env.example to .env and add your API key)
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
 ```
 
 #### OpenClaw Integration
 
-1. Run `./start-jiner.sh` to start Jiner service
+1. Run `./start-jiner.sh` to start Jiner service (port 3001)
 2. Open OpenClaw at http://localhost:18789
 3. Add plugin: `path/to/privy-jiner/dist/openclaw-plugin.js`
 4. Say "我喝了500ml水" to log water!
 
 ### Documentation
 
+- [Quick Start](./docs/quickstart.md) - 5分钟快速部署
 - [User Manual](./docs/manual.md)
 - [API Reference](./docs/api.md)
 - [Plugin Development](./docs/plugin-dev.md)
+
+### Configuration
+
+Copy `.env.example` to `.env` and configure your AI provider:
+
+```bash
+cp .env.example .env
+```
 
 ### License
 
@@ -97,25 +95,30 @@ jiner私人管家是一个开源的个人 AI 助手系统，专为个人使用�
 ### 快速开始
 
 ```bash
-# 克隆仓库
+# 克隆并一键启动（推荐）
 git clone https://github.com/blanco-00/privy-jiner.git
 cd privy-jiner
+./start-jiner.sh
 
-# 安装依赖
-npm install
-
-# 构建项目
-npm run build
-
-# 独立模式运行
-npm run dev
+# 配置 AI（复制 .env.example 为 .env 并填入 API Key）
+cp .env.example .env
+# 编辑 .env 添加你的 OPENAI_API_KEY
 ```
 
 ### 文档
 
+- [快速开始](./docs/quickstart.md) - 5分钟快速部署
 - [用户手册](./docs/manual.md)
 - [API 参考](./docs/api.md)
 - [插件开发](./docs/plugin-dev.md)
+
+### 配置
+
+复制 `.env.example` 为 `.env` 并配置你的 AI Provider：
+
+```bash
+cp .env.example .env
+```
 
 ### 许可证
 
