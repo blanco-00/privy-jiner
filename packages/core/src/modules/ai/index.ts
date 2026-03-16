@@ -56,6 +56,7 @@ export class AIService {
 
   getConfig(): AIConfig | null {
     const config = this.db.prepare('SELECT * FROM ai_config WHERE is_active = 1 LIMIT 1').get() as AIConfig | null;
+    console.log('[AI Service] getConfig result:', { provider: config?.provider, hasApiKey: !!config?.api_key, api_key_length: config?.api_key?.length });
     if (config && config.api_key) {
       config.api_key = decryptApiKey(config.api_key);
     }
@@ -71,10 +72,12 @@ export class AIService {
   }
 
   saveConfig(data: { provider: string; api_key?: string; base_url?: string; model?: string; temperature?: number; max_tokens?: number }, isNew?: boolean): AIConfig {
+    console.log('[AI Service] saveConfig called:', { provider: data.provider, hasApiKey: !!data.api_key, isNew });
     const existing = !isNew ? this.getConfigMasked() : null;
     const now = new Date().toISOString();
 
     if (existing) {
+      console.log('[AI Service] Updating existing config, id:', existing.id);
       const fields: string[] = ['provider = ?', 'updated_at = ?'];
       const values: any[] = [data.provider, now];
 
@@ -90,6 +93,7 @@ export class AIService {
       values.push(existing.id);
       this.db.prepare(`UPDATE ai_config SET ${fields.join(', ')} WHERE id = ?`).run(...values);
     } else {
+      console.log('[AI Service] Creating new config');
       const id = uuidv4();
       this.db.prepare(`
         INSERT INTO ai_config (id, provider, api_key, base_url, model, temperature, max_tokens, is_active, created_at, updated_at)
@@ -131,7 +135,7 @@ export class AIService {
     this.db.prepare('DELETE FROM chat_history').run();
   }
 
-  async sendMessage(content: string): Promise<string> {
+  async sendMessage(content: string, _modelId?: string): Promise<string> {
     const config = this.getConfig();
     if (!config) {
       return 'AI not configured. Please set up your AI provider in Settings.';
@@ -208,5 +212,13 @@ export class AIService {
     this.db.prepare(`UPDATE ai_config SET ${fields.join(', ')} WHERE id = ?`).run(...values);
 
     return this.getConfigMasked();
+  }
+
+  getEnabledModels(): AIConfig[] {
+    const configs = this.db.prepare('SELECT * FROM ai_config WHERE is_active = 1').all() as AIConfig[];
+    return configs.map(config => ({
+      ...config,
+      api_key: config.api_key ? '********' : null
+    }));
   }
 }

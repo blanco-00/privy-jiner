@@ -5,17 +5,23 @@ import { FinanceService } from '../modules/finance/index.js';
 
 export function createAIRouter(aiService: AIService, healthService?: HealthService, financeService?: FinanceService): Router {
   const router = Router();
+  
+  console.log('[AI Router] Initialized, healthService:', !!healthService, 'financeService:', !!financeService);
 
   if (healthService) {
     router.post('/nlu', async (req: Request, res: Response) => {
       try {
         const { message } = req.body;
+        console.log('[AI /nlu] Received message:', message);
+        
         if (!message) {
           res.status(400).json({ error: 'message is required' });
           return;
         }
 
         const config = aiService.getConfig();
+        console.log('[AI /nlu] Config provider:', config?.provider, 'has api_key:', !!config?.api_key);
+        
         if (!config || !config.api_key) {
           res.status(400).json({ error: 'AI not configured. Please set up your AI provider first.' });
           return;
@@ -74,24 +80,55 @@ For expense: extract amount and category if mentioned.`;
             'x-api-key': config.api_key,
             'anthropic-version': '2023-06-01',
           };
+        } else if (config.provider === 'zhipu') {
+          apiUrl = `${config.base_url || 'https://open.bigmodel.cn/api/paas/v4'}/chat/completions`;
+          headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.api_key}`,
+          };
+        } else if (config.provider === 'minimax') {
+          apiUrl = `${config.base_url || 'https://api.minimax.chat/v1'}/text/chatcompletion_v2`;
+          headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.api_key}`,
+          };
         } else {
-          res.status(400).json({ error: 'Unsupported provider' });
+          res.status(400).json({ error: 'Unsupported provider: ' + config.provider });
           return;
         }
 
-        const model = config.model || (config.provider === 'openai' ? 'gpt-3.5-turbo' : 'claude-3-haiku-20240307');
+        const model = config.model || (config.provider === 'openai' ? 'gpt-3.5-turbo' : config.provider === 'claude' ? 'claude-3-haiku-20240307' : config.provider === 'zhipu' ? 'glm-4' : config.provider === 'minimax' ? 'MiniMax-M2.1' : 'gpt-3.5-turbo');
 
-        const requestBody: Record<string, unknown> = {
-          model,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.3,
-          max_tokens: 500,
-        };
+        let requestBody: Record<string, unknown>;
+        
+        if (config.provider === 'zhipu') {
+          requestBody = {
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+            max_tokens: 500,
+          };
+        } else if (config.provider === 'minimax') {
+          requestBody = {
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+            max_tokens: 500,
+          };
+        } else {
+          requestBody = {
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+            max_tokens: 500,
+          };
+        }
 
         if (config.provider === 'claude') {
           (requestBody as any).system = 'You are a helpful assistant that outputs valid JSON only.';
         }
 
+        console.log('[AI /nlu] Calling AI API:', config.provider, 'url:', apiUrl);
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers,
@@ -100,17 +137,23 @@ For expense: extract amount and category if mentioned.`;
 
         if (!response.ok) {
           const error = await response.text();
+          console.error('[AI /nlu] AI API error:', response.status, error);
           res.status(500).json({ error: `AI API error: ${error}` });
           return;
         }
 
         const data = await response.json() as any;
+        console.log('[AI /nlu] AI response received, parsing...');
         let content = '';
 
         if (config.provider === 'openai') {
           content = data.choices?.[0]?.message?.content || '';
         } else if (config.provider === 'claude') {
           content = data.content?.[0]?.text || '';
+        } else if (config.provider === 'zhipu') {
+          content = data.choices?.[0]?.message?.content || '';
+        } else if (config.provider === 'minimax') {
+          content = data.choices?.[0]?.message?.content || '';
         }
 
         let parsed;
@@ -138,7 +181,9 @@ For expense: extract amount and category if mentioned.`;
 
         if (toolName === 'health_log_water' && healthService) {
           const amount = parseInt(args.amount) || 250;
-          result = healthService.logWater(amount, args.date);
+          const date = args.date || new Date().toISOString().split('T')[0];
+          console.log('[AI /nlu] Logging water:', { amount, date });
+          result = healthService.logWater(amount, date);
           res.json({
             success: true,
             message: `Logged ${amount}ml of water!`,
@@ -148,10 +193,12 @@ For expense: extract amount and category if mentioned.`;
         } else if (toolName === 'health_log_exercise' && healthService) {
           const activity = args.activity || 'exercise';
           const duration = parseInt(args.duration) || 30;
+          const date = args.date || new Date().toISOString().split('T')[0];
+          console.log('[AI /nlu] Logging exercise:', { activity, duration, date });
           result = healthService.logExercise({
             type: activity,
             duration,
-            date: args.date,
+            date,
           });
           res.json({
             success: true,
@@ -183,7 +230,7 @@ For expense: extract amount and category if mentioned.`;
         }
       } catch (error) {
         console.error('NLU processing error:', error);
-        res.status(500).json({ error: 'Failed to process natural language request' });
+        res.status(500).json({ error: 'Failed to process natural language request: ' + (error instanceof Error ? error.message : String(error)) });
       }
     });
   }
@@ -368,15 +415,22 @@ For expense: extract amount and category if mentioned.`;
 
   router.post('/chat', async (req: Request, res: Response) => {
     try {
-      const { message } = req.body;
+      const { message, modelId } = req.body;
+      console.log('[AI /chat] Received message:', message?.substring(0, 50), 'modelId:', modelId);
+      
       if (!message) {
         res.status(400).json({ error: 'message is required' });
         return;
       }
-      const response = await aiService.sendMessage(message);
-      res.json({ response });
+      const result = await aiService.sendMessage(message, modelId);
+      console.log('[AI /chat] Response sent successfully');
+      const config = aiService.getConfig();
+      res.json({ 
+        response: result,
+        modelName: config?.model || config?.provider 
+      });
     } catch (error) {
-      console.error('Send chat message error:', error);
+      console.error('[AI /chat] Send chat message error:', error);
       res.status(500).json({ error: 'Failed to send chat message' });
     }
   });
@@ -417,30 +471,23 @@ For expense: extract amount and category if mentioned.`;
     }
   });
 
-  router.put('/configs/:id', async (req: Request, res: Response) => {
+  router.get('/models', async (_req: Request, res: Response) => {
     try {
-      const { id } = req.params;
-      const { provider, api_key, base_url, model, temperature, max_tokens } = req.body;
-      const apiKey = req.body.apiKey || api_key;
-      const baseUrl = req.body.baseUrl || base_url;
-
-      const config = aiService.updateConfig(id, { 
-        provider, 
-        api_key: apiKey, 
-        base_url: baseUrl, 
-        model, 
-        temperature, 
-        max_tokens 
+      console.log('[AI /models] Fetching enabled models');
+      const models = aiService.getEnabledModels();
+      console.log('[AI /models] Found models:', models.length);
+      res.json({
+        models: models.map((m: any) => ({
+          id: m.id,
+          provider: m.provider,
+          name: m.model || m.provider,
+          model: m.model,
+          enabled: m.is_active,
+        })),
       });
-      
-      if (config) {
-        res.json({ code: 0, data: config });
-      } else {
-        res.status(404).json({ error: 'Config not found' });
-      }
     } catch (error) {
-      console.error('Update AI config error:', error);
-      res.status(500).json({ error: 'Failed to update AI config' });
+      console.error('Get enabled models error:', error);
+      res.status(500).json({ error: 'Failed to get models' });
     }
   });
 
