@@ -1,15 +1,196 @@
 import { Router, Request, Response } from 'express';
 import { AIService } from '../modules/ai/index.js';
+import { HealthService } from '../modules/health/index.js';
+import { FinanceService } from '../modules/finance/index.js';
 
-export function createAIRouter(aiService: AIService): Router {
+export function createAIRouter(aiService: AIService, healthService?: HealthService, financeService?: FinanceService): Router {
   const router = Router();
+
+  if (healthService) {
+    router.post('/nlu', async (req: Request, res: Response) => {
+      try {
+        const { message } = req.body;
+        if (!message) {
+          res.status(400).json({ error: 'message is required' });
+          return;
+        }
+
+        const config = aiService.getConfig();
+        if (!config || !config.api_key) {
+          res.status(400).json({ error: 'AI not configured. Please set up your AI provider first.' });
+          return;
+        }
+
+        const tools = [
+          {
+            name: 'health_log_water',
+            description: 'Log water intake in milliliters. Use when user says they drank water.',
+            keywords: ['water', 'drank', 'drink', 'cups', 'glasses', 'ml'],
+          },
+          {
+            name: 'health_log_exercise',
+            description: 'Log exercise activity. Use when user mentions exercise, running, walking, etc.',
+            keywords: ['exercise', 'run', 'walk', 'workout', 'gym', 'yoga', 'swim', 'minutes'],
+          },
+          {
+            name: 'finance_record_expense',
+            description: 'Record an expense. Use when user mentions spending money or buying something.',
+            keywords: ['spent', 'bought', 'paid', 'expense', 'cost', 'money'],
+          },
+        ];
+
+        const prompt = `You are an intent parser for a personal assistant.
+
+User message: "${message}"
+
+Determine which action to take. Respond in JSON format:
+{
+  "tool": "tool_name" or null,
+  "args": {"param1": "value1"},
+  "confidence": 0.0-1.0,
+  "reasoning": "explanation"
+}
+
+Available tools:
+${tools.map(t => `- ${t.name}: ${t.description} (keywords: ${t.keywords.join(', ')})`).join('\n')}
+
+For water: extract amount in ml (1 glass = 250ml, 1 cup = 250ml).
+For exercise: extract activity type and duration in minutes.
+For expense: extract amount and category if mentioned.`;
+
+        let apiUrl: string;
+        let headers: Record<string, string>;
+
+        if (config.provider === 'openai') {
+          apiUrl = `${config.base_url || 'https://api.openai.com/v1'}/chat/completions`;
+          headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.api_key}`,
+          };
+        } else if (config.provider === 'claude') {
+          apiUrl = `${config.base_url || 'https://api.anthropic.com/v1'}/messages`;
+          headers = {
+            'Content-Type': 'application/json',
+            'x-api-key': config.api_key,
+            'anthropic-version': '2023-06-01',
+          };
+        } else {
+          res.status(400).json({ error: 'Unsupported provider' });
+          return;
+        }
+
+        const model = config.model || (config.provider === 'openai' ? 'gpt-3.5-turbo' : 'claude-3-haiku-20240307');
+
+        const requestBody: Record<string, unknown> = {
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.3,
+          max_tokens: 500,
+        };
+
+        if (config.provider === 'claude') {
+          (requestBody as any).system = 'You are a helpful assistant that outputs valid JSON only.';
+        }
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          res.status(500).json({ error: `AI API error: ${error}` });
+          return;
+        }
+
+        const data = await response.json() as any;
+        let content = '';
+
+        if (config.provider === 'openai') {
+          content = data.choices?.[0]?.message?.content || '';
+        } else if (config.provider === 'claude') {
+          content = data.content?.[0]?.text || '';
+        }
+
+        let parsed;
+        try {
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsed = JSON.parse(jsonMatch[0]);
+          }
+        } catch {
+          parsed = null;
+        }
+
+        if (!parsed || !parsed.tool || parsed.confidence < 0.7) {
+          res.json({
+            success: false,
+            message: 'Could not understand the request. Try being more specific.',
+            originalMessage: message,
+          });
+          return;
+        }
+
+        let result;
+        const toolName = parsed.tool;
+        const args = parsed.args || {};
+
+        if (toolName === 'health_log_water' && healthService) {
+          const amount = parseInt(args.amount) || 250;
+          result = healthService.logWater(amount, args.date);
+          res.json({
+            success: true,
+            message: `Logged ${amount}ml of water!`,
+            tool: toolName,
+            result,
+          });
+        } else if (toolName === 'health_log_exercise' && healthService) {
+          const activity = args.activity || 'exercise';
+          const duration = parseInt(args.duration) || 30;
+          result = healthService.logExercise({
+            type: activity,
+            duration,
+            date: args.date,
+          });
+          res.json({
+            success: true,
+            message: `Logged ${duration} minutes of ${activity}!`,
+            tool: toolName,
+            result,
+          });
+        } else if ((toolName === 'finance_record_expense' || toolName === 'finance_record') && financeService) {
+          const amount = parseFloat(args.amount) || 0;
+          result = financeService.createTransaction({
+            amount,
+            type: 'expense',
+            category_id: null,
+            description: args.category || args.description || null,
+            date: args.date || new Date().toISOString().split('T')[0],
+          });
+          res.json({
+            success: true,
+            message: `Logged expense of ${amount}!`,
+            tool: toolName,
+            result,
+          });
+        } else {
+          res.json({
+            success: false,
+            message: 'Tool not available',
+            tool: toolName,
+          });
+        }
+      } catch (error) {
+        console.error('NLU processing error:', error);
+        res.status(500).json({ error: 'Failed to process natural language request' });
+      }
+    });
+  }
 
   router.get('/config', async (_req: Request, res: Response) => {
     try {
-      const config = aiService.getConfig();
-      if (config) {
-        (config as any).api_key = config.api_key ? '********' : null;
-      }
+      const config = aiService.getConfigMasked();
       res.json(config);
     } catch (error) {
       console.error('Get AI config error:', error);
@@ -24,8 +205,8 @@ export function createAIRouter(aiService: AIService): Router {
         res.status(400).json({ error: 'provider is required' });
         return;
       }
-      const config = aiService.saveConfig({ provider, api_key, base_url, model, temperature, max_tokens });
-      (config as any).api_key = config.api_key ? '********' : null;
+      aiService.saveConfig({ provider, api_key, base_url, model, temperature, max_tokens });
+      const config = aiService.getConfigMasked();
       res.json(config);
     } catch (error) {
       console.error('Save AI config error:', error);
@@ -40,6 +221,115 @@ export function createAIRouter(aiService: AIService): Router {
     } catch (error) {
       console.error('Test AI connection error:', error);
       res.status(500).json({ error: 'Failed to test AI connection' });
+    }
+  });
+
+  // Alias for /test (used by frontend)
+  router.post('/test', async (req: Request, res: Response) => {
+    try {
+      const { apiKey, provider } = req.body;
+      const result = await aiService.testConnection(apiKey, provider);
+      res.json(result);
+    } catch (error) {
+      console.error('Test AI connection error:', error);
+      res.status(500).json({ error: 'Failed to test AI connection' });
+    }
+  });
+
+  router.post('/models', async (req: Request, res: Response) => {
+    try {
+      const { apiKey, provider, baseUrl } = req.body;
+      
+      if (!apiKey) {
+        res.status(400).json({ code: 400, error: 'API key is required' });
+        return;
+      }
+
+      // Fallback model lists (used when network is unavailable)
+      const fallbackModels: Record<string, Array<{ id: string; name: string }>> = {
+        openai: [
+          { id: 'gpt-4o', name: 'GPT-4o' },
+          { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+          { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+          { id: 'gpt-4', name: 'GPT-4' },
+          { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
+        ],
+        claude: [
+          { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4' },
+          { id: 'claude-opus-4-20250514', name: 'Claude Opus 4' },
+          { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
+          { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
+          { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' }
+        ],
+        zhipu: [
+          { id: 'glm-4', name: 'GLM-4' },
+          { id: 'glm-4-flash', name: 'GLM-4 Flash' },
+          { id: 'glm-4-plus', name: 'GLM-4 Plus' },
+          { id: 'glm-3-turbo', name: 'GLM-3 Turbo' }
+        ],
+        minimax: [
+          { id: 'MiniMax-M2.5', name: 'MiniMax M2.5' },
+          { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' },
+          { id: 'MiniMax-Text-01', name: 'MiniMax Text 01' },
+          { id: 'abab6.5s-chat', name: 'ABAB 6.5S Chat' },
+          { id: 'abab6.5g-chat', name: 'ABAB 6.5G Chat' }
+        ]
+      };
+
+      let models: Array<{ id: string; name: string }> = [];
+
+      try {
+        if (provider === 'openai') {
+          const url = (baseUrl || 'https://api.openai.com/v1') + '/models';
+          const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+          });
+          if (!response.ok) {
+            // Use fallback models on API error
+            models = fallbackModels.openai;
+          } else {
+            const data = await response.json() as { data: Array<{ id: string }> };
+            models = data.data.filter((m: any) => m.id.startsWith('gpt-')).map(m => ({ id: m.id, name: m.id }));
+          }
+        } else if (provider === 'claude') {
+          const url = (baseUrl || 'https://api.anthropic.com/v1') + '/models';
+          const response = await fetch(url, {
+            headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          });
+          if (!response.ok) {
+            models = fallbackModels.claude;
+          } else {
+            const data = await response.json() as { data: Array<{ id: string; name: string }> };
+            models = data.data.map(m => ({ id: m.id, name: m.name }));
+          }
+        } else if (provider === 'zhipu') {
+          const url = (baseUrl || 'https://open.bigmodel.cn/api/paas/v4') + '/models';
+          const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+          });
+          if (!response.ok) {
+            models = fallbackModels.zhipu;
+          } else {
+            const data = await response.json() as { data: Array<{ id: string }> };
+            models = data.data.map(m => ({ id: m.id, name: m.id }));
+          }
+      } else if (provider === 'minimax') {
+        // MiniMax doesn't have a public models list API, use fallback
+        models = fallbackModels.minimax;
+        } else {
+          res.json({ code: 400, error: 'Provider does not support model listing' });
+          return;
+        }
+      } catch (networkError) {
+        // Network error - use fallback models
+        console.warn('Network error fetching models, using fallback list:', networkError);
+        models = fallbackModels[provider] || [];
+      }
+
+      res.json({ code: 0, models });
+    } catch (error) {
+      console.error('Fetch models error:', error);
+      res.status(500).json({ code: 500, error: 'Failed to fetch models' });
     }
   });
 

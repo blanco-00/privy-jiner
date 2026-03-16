@@ -1,3 +1,12 @@
+weekday:
+  sunday: 周日
+  monday: 周一
+  tuesday: 周二
+  wednesday: 周三
+  thursday: 周四
+  friday: 周五
+  saturday: 周六
+
 buttons:
   pureAccountSettings: 账户设置
   pureLoginOut: 退出系统
@@ -74,22 +83,55 @@ menus:
   pureHome: 首页
   pureLogin: 登录
   pureEmpty: 无Layout页
+  dashboard: 控制台
+  dashboardOverview: 概览
+  tasks: 任务
+  tasksManagement: 任务管理
+  contacts: 联系人
+  contactsManagement: 联系人管理
   pureFinance: 财务管理
   pureFinanceRecord: 收支记录
+  financeRecords: 收支记录
+  financeBudget: 预算管理
+  financeInvestments: 投资组合
   pureBudget: 预算管理
   pureInvestment: 投资组合
   pureHealth: 健康管理
+  health: 健康管理
+  healthWater: 喝水记录
+  healthExercise: 运动追踪
+  healthGoals: 健康目标
   pureWater: 喝水记录
   pureExercise: 运动追踪
   pureHealthGoals: 健康目标
   pureFashion: 时尚管理
+  fashion: 时尚管理
+  fashionWardrobe: 衣橱管理
+  fashionOutfits: 穿搭推荐
   pureWardrobe: 衣橱管理
   pureOutfit: 穿搭推荐
   pureKnowledge: 知识管理
+  knowledge: 知识管理
+  knowledgeDaily: 每日知识
   pureDailyPush: 每日知识推送
   pureNews: 新闻管理
+  news: 新闻管理
+  newsAggregate: 新闻聚合
+  newsRecommendations: 新闻推荐
   pureNewsAggregation: 新闻聚合
+  pureAiChat: AI助手
+  pureAiChatChat: AI聊天
+  pureAiConfig: AI配置
+  aiChat: AI助手
+  aiChatChat: AI聊天
+  aiConfig: AI配置
   pureSysManagement: 系统管理
+  settings: 设置
+  settingsProfile: 个人资料
+  settingsSecurity: 安全设置
+  settingsNotifications: 通知设置
+  schedule: 日程
+  scheduleManagement: 日程管理
   pureUser: 用户管理
   pureRole: 角色管理
   pureSystemMenu: 菜单管理
@@ -120,6 +162,14 @@ login:
   pureRememberInfo: 勾选并登录后，规定天数内无需输入用户名和密码会自动登入系统
   pureSure: 确认密码
   pureForget: 忘记密码?
+  zhCN: 简体中文
+  enUS: English
+  theme: 主题
+  i18n: 国际化
+  phoneLogin: 手机号登录
+  qrCodeLogin: 二维码登录
+  regist: 注册
+  forgetPassword: 忘记密码
   pureLogin: 登录
   pureThirdLogin: 第三方登录
   purePhoneLogin: 手机登录
@@ -168,3 +218,184 @@ tableBar:
   pureReset: 重置
   pureExitFullScreen: 退出全屏
   pureFullScreen: 全屏
+
+common:
+  save: 保存
+
+aiConfigPage:
+  title: AI 配置
+  provider: 模型提供商
+  providerOpenai: OpenAI
+  providerClaude: Claude (Anthropic)
+  providerZhipu: 智谱AI
+  providerMiniMax: MiniMax
+  providerCustom: 自定义
+  customModel: 自定义模型
+  selectProvider: 请选择提供商
+  apiKey: API Key
+  apiKeyPlaceholder: 请输入 API Key
+  model: 模型
+  selectModel: 请选择模型
+  baseUrl: 自定义地址
+  baseUrlPlaceholder: 请输入自定义 API 地址
+  testConnection: 测试连接
+  saveSuccess: 保存成功
+  saveFailed: 保存失败
+  testSuccess: 连接成功
+  testFailed: 连接失败
+  apiKeyRequired: 请输入 API Key
+  nluSettings: 自然语言设置
+  nlEnabled: 启用自然语言
+  nlExamples: 使用示例
+  nlExample1: '"我喝了3杯水" - 自动记录喝水'
+  nlExample2: '"我跑了30分钟" - 自动记录运动'
+  nlExample3: '"今天花了100块" - 自动记录支出'
+
+aiChat:
+  title: AI 对话
+  welcomeMessage: "你好！我是你的 AI 助手。你可以和我聊天，也可以用自然语言记录健康数据，比如：\n- 我喝了3杯水\n- 我跑了30分钟\n- 今天花了100块"
+  placeholder: 试试说 "我喝了3杯水"
+  placeholderDisabled: 输入消息...
+  send: 发送
+  clear: 清空
+  thinking: 思考中...
+  errorMessage: 抱歉，发生了错误。请稍后重试。
+  fallbackMessage: "抱歉，我没有理解你的意思。你可以尝试：\n- 我喝了3杯水\n- 我跑了30分钟"
+  requestError: 抱歉，我无法处理你的请求。
+  nluTip: 试试说 "我喝了3杯水" 或 "我跑了30分钟" 来自动记录健康数据
+
+# Page Content Translations
+pageContent:
+  # Health
+  healthWater: 喝水记录
+  healthWaterDesc: 追踪您的每日饮水量
+  healthWaterInDev: 喝水记录功能开发中...
+
+  healthExercise: 运动追踪
+  healthExerciseDesc: 记录您的运动数据
+  healthExerciseInDev: 运动追踪功能开发中...
+
+  healthGoals: 健康目标
+  healthGoalsDesc: 设置和追踪您的健康目标
+  healthGoalsInDev: 健康目标功能开发中...
+
+  # Finance
+  financeRecords: 收支记录
+  financeRecordsDesc: 管理您的收入和支出记录
+  financeRecordsInDev: 收支记录功能开发中...
+
+  financeBudget: 预算管理
+  financeBudgetDesc: 设置和追踪您的预算
+  financeBudgetInDev: 预算管理功能开发中...
+
+  financeInvestments: 投资组合
+  financeInvestmentsDesc: 管理您的投资资产
+  financeInvestmentsInDev: 投资组合功能开发中...
+
+  # Fashion
+  fashionWardrobe: 衣橱管理
+  fashionWardrobeDesc: 管理您的服装库存
+  fashionWardrobeInDev: 衣橱管理功能开发中...
+
+  fashionOutfits: 穿搭推荐
+  fashionOutfitsDesc: AI智能穿搭建议
+  fashionOutfitsInDev: 穿搭推荐功能开发中...
+
+  # Knowledge
+  knowledgeDaily: 每日知识
+  knowledgeDailyDesc: 每日知识推送
+  knowledgeDailyInDev: 每日知识功能开发中...
+
+  # News
+  newsAggregate: 新闻聚合
+  newsAggregateDesc: 智能新闻聚合与推荐
+  newsAggregateInDev: 新闻聚合功能开发中...
+
+  newsRecommendations: 个性化推荐
+  newsRecommendationsDesc: 个性化新闻推荐
+  newsRecommendationsInDev: 新闻推荐功能开发中...
+
+  # Tasks
+  tasksManagement: 任务管理
+  tasksManagementDesc: 管理您的任务和待办事项
+  tasksManagementInDev: 任务管理功能开发中...
+
+  # Contacts
+  contactsManagement: 通讯录
+  contactsManagementDesc: 管理您的联系人
+  contactsManagementInDev: 通讯录功能开发中...
+
+  # Schedule
+  scheduleManagement: 日程管理
+  scheduleManagementDesc: 管理您的日程安排
+  scheduleManagementInDev: 日程管理功能开发中...
+
+  # Dashboard
+  dashboardOverview: 控制台概览
+  dashboardWelcome: 欢迎使用您的个人AI助手
+
+# Welcome Page (首页)
+welcome:
+  lastWeek: 上周
+  thisWeek: 本周
+  todayExpense: 今日支出
+  waterIntake: 喝水记录
+  todoTasks: 待办任务
+  healthScore: 健康指数
+  unitYuan: 元
+  unitCup: 杯
+  unitItem: 项
+  unitPoint: 分
+  analysisOverview: 分析概览
+  resolutionProbability: 解决概率
+  dataStatistics: 数据统计
+  latestNews: 最新动态
+  noData: 暂无数据
+  viewDetails: "查看序号为 {id} 的详情"
+  orderNumber: 序号
+  requiredNumber: 需求人数
+  questionCount: 提问数量
+  resolveCount: 解决数量
+  userSatisfaction: 用户满意度
+  statisticsDate: 统计日期
+  operation: 操作
+  newIssues: "新增 {required} 条问题，{resolved} 条已解决"
+
+error:
+  pageNotFound: 抱歉，您访问的页面不存在
+  backHome: 返回首页
+  noPermission: 您没有权限访问此页面
+  serverError: 服务器错误，请稍后重试
+
+about:
+  platformInfo: 平台信息
+  prodDeps: 生产环境依赖
+  devDeps: 开发环境依赖
+  version: 当前版本
+  buildTime: 最后编译时间
+  nodeVersion: 推荐 node 版本
+  pnpmVersion: 推荐 pnpm 版本
+  fullCode: 完整版代码地址
+  fullCodeLink: 完整版代码链接
+  thinCode: 精简版代码地址
+  thinCodeLink: 精简版代码链接
+  docs: 文档地址
+  docsLink: 文档链接
+  preview: 预览地址
+  previewLink: 预览链接
+
+result:
+  successPage: 成功页
+  failPage: 失败页
+  codeLocation: 代码位置
+  submitSuccess: 提交成功
+  submitFail: 提交失败
+  successDesc: 提交结果页用于反馈一系列操作任务的处理结果，如果仅是简单操作，使用 Message 全局提示反馈即可。
+  failDesc: 请核对并修改以下信息后，再重新提交。
+  backToList: 返回列表
+  viewProject: 查看项目
+  print: 打印
+  backToModify: 返回修改
+  projectId: 项目 ID
+  owner: 负责人
+  effectiveTime: 生效时间

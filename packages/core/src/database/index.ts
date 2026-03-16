@@ -416,6 +416,31 @@ export class DatabaseManager {
           CREATE INDEX IF NOT EXISTS idx_ai_usage_created ON ai_usage(created_at);
         `,
       },
+      {
+        name: '008_ai_providers_update',
+        sql: `
+          -- Recreate ai_config table with more providers
+          ALTER TABLE ai_config RENAME TO ai_config_old;
+          
+          CREATE TABLE ai_config (
+            id TEXT PRIMARY KEY,
+            provider TEXT NOT NULL CHECK (provider IN ('openai', 'claude', 'gemini', 'custom', 'zhipu', 'minimax')),
+            api_key TEXT,
+            base_url TEXT,
+            model TEXT,
+            temperature REAL DEFAULT 0.7,
+            max_tokens INTEGER DEFAULT 2048,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          );
+          
+          INSERT INTO ai_config (id, provider, api_key, base_url, model, temperature, max_tokens, is_active, created_at, updated_at)
+          SELECT id, provider, api_key, base_url, model, temperature, max_tokens, is_active, created_at, updated_at FROM ai_config_old;
+          
+          DROP TABLE ai_config_old;
+        `,
+      },
     ];
 
     const appliedStmt = this.db.prepare('SELECT name FROM migrations');

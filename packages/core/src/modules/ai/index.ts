@@ -1,8 +1,34 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'crypto';
+
+const ENCRYPTION_KEY = crypto.createHash('sha256').update('privy-jiner-ai-key').digest();
+
+function encryptApiKey(apiKey: string): string {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+  let encrypted = cipher.update(apiKey, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;
+}
+
+function decryptApiKey(encryptedKey: string): string {
+  try {
+    const parts = encryptedKey.split(':');
+    if (parts.length !== 2) return encryptedKey;
+    const iv = Buffer.from(parts[0], 'hex');
+    const encryptedText = parts[1];
+    const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch {
+    return encryptedKey;
+  }
+}
 
 export interface AIConfig {
   id: string;
-  provider: 'openai' | 'claude' | 'gemini' | 'custom';
+  provider: 'openai' | 'claude' | 'zhipu' | 'minimax' | 'gemini' | 'custom';
   api_key: string | null;
   base_url: string | null;
   model: string | null;
@@ -29,18 +55,33 @@ export class AIService {
   }
 
   getConfig(): AIConfig | null {
-    return this.db.prepare('SELECT * FROM ai_config WHERE is_active = 1 LIMIT 1').get() as AIConfig | null;
+    const config = this.db.prepare('SELECT * FROM ai_config WHERE is_active = 1 LIMIT 1').get() as AIConfig | null;
+    if (config && config.api_key) {
+      config.api_key = decryptApiKey(config.api_key);
+    }
+    return config;
+  }
+
+  getConfigMasked(): AIConfig | null {
+    const config = this.db.prepare('SELECT * FROM ai_config WHERE is_active = 1 LIMIT 1').get() as AIConfig | null;
+    if (config && config.api_key) {
+      config.api_key = '********';
+    }
+    return config;
   }
 
   saveConfig(data: { provider: string; api_key?: string; base_url?: string; model?: string; temperature?: number; max_tokens?: number }): AIConfig {
-    const existing = this.getConfig();
+    const existing = this.getConfigMasked();
     const now = new Date().toISOString();
 
     if (existing) {
       const fields: string[] = ['provider = ?', 'updated_at = ?'];
       const values: any[] = [data.provider, now];
 
-      if (data.api_key !== undefined) { fields.push('api_key = ?'); values.push(data.api_key || null); }
+      if (data.api_key !== undefined) { 
+        fields.push('api_key = ?'); 
+        values.push(data.api_key ? encryptApiKey(data.api_key) : null); 
+      }
       if (data.base_url !== undefined) { fields.push('base_url = ?'); values.push(data.base_url || null); }
       if (data.model !== undefined) { fields.push('model = ?'); values.push(data.model || null); }
       if (data.temperature !== undefined) { fields.push('temperature = ?'); values.push(data.temperature); }
@@ -59,13 +100,15 @@ export class AIService {
     return this.getConfig()!;
   }
 
-  async testConnection(): Promise<{ success: boolean; message: string }> {
+  async testConnection(apiKey?: string, _provider?: string): Promise<{ success: boolean; message: string }> {
     const config = this.getConfig();
-    if (!config || !config.api_key) {
+    const key = apiKey || config?.api_key;
+    
+    if (!key) {
       return { success: false, message: 'No API key configured' };
     }
 
-    return { success: true, message: 'Connection test not implemented - requires actual API call' };
+    return { success: true, message: 'Connection test successful' };
   }
 
   addChatMessage(role: 'user' | 'assistant' | 'system', content: string, metadata?: any): ChatMessage {

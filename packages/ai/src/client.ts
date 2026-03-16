@@ -241,12 +241,263 @@ export class ClaudeClient extends BaseModelClient {
   }
 }
 
+export class ZhipuClient extends BaseModelClient {
+  async chat(options: ChatOptions): Promise<ChatResponse> {
+    const apiKey = this.model.apiKey || process.env.ZHIPU_API_KEY;
+    if (!apiKey) {
+      throw new Error('Zhipu AI API key not configured');
+    }
+
+    const baseUrl = this.model.baseUrl || 'https://open.bigmodel.cn/api/paas/v4';
+    const url = `${baseUrl}/chat/completions`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model.model,
+        messages: options.messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Zhipu AI API error: ${error}`);
+    }
+
+    const data = await response.json() as {
+      choices: Array<{ message: { content: string } }>;
+      usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+    };
+
+    const message = data.choices[0]?.message?.content || '';
+    const usage = data.usage;
+
+    return {
+      content: message,
+      usage: {
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+      },
+    };
+  }
+
+  async *chatStream(options: ChatOptions): AsyncGenerator<StreamChunk> {
+    const apiKey = this.model.apiKey || process.env.ZHIPU_API_KEY;
+    if (!apiKey) {
+      throw new Error('Zhipu AI API key not configured');
+    }
+
+    const baseUrl = this.model.baseUrl || 'https://open.bigmodel.cn/api/paas/v4';
+    const url = `${baseUrl}/chat/completions`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model.model,
+        messages: options.messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Zhipu AI API error: ${error}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') {
+          yield { delta: '', done: true };
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content || '';
+          if (delta) {
+            yield { delta, done: false };
+          }
+        } catch {
+          // Skip invalid JSON
+        }
+      }
+    }
+  }
+
+  calculateCost(promptTokens: number, completionTokens: number): number {
+    const pricing = {
+      'glm-4': { prompt: 0.01, completion: 0.01 },
+      'glm-4-turbo': { prompt: 0.001, completion: 0.001 },
+      'glm-4-plus': { prompt: 0.01, completion: 0.01 },
+      'glm-3-turbo': { prompt: 0.001, completion: 0.001 },
+    };
+
+    const modelPricing = pricing[this.model.model as keyof typeof pricing] || { prompt: 0.001, completion: 0.001 };
+    return (promptTokens / 1000) * modelPricing.prompt + (completionTokens / 1000) * modelPricing.completion;
+  }
+}
+
+export class MiniMaxClient extends BaseModelClient {
+  async chat(options: ChatOptions): Promise<ChatResponse> {
+    const apiKey = this.model.apiKey || process.env.MINIMAX_API_KEY;
+    if (!apiKey) {
+      throw new Error('MiniMax API key not configured');
+    }
+
+    const baseUrl = this.model.baseUrl || 'https://api.minimax.chat/v1';
+    const url = `${baseUrl}/text/chatcompletion_v2`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model.model,
+        messages: options.messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`MiniMax API error: ${error}`);
+    }
+
+    const data = await response.json() as {
+      choices: Array<{ message: { content: string } }>;
+      usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+    };
+
+    const message = data.choices[0]?.message?.content || '';
+    const usage = data.usage;
+
+    return {
+      content: message,
+      usage: {
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+      },
+    };
+  }
+
+  async *chatStream(options: ChatOptions): AsyncGenerator<StreamChunk> {
+    const apiKey = this.model.apiKey || process.env.MINIMAX_API_KEY;
+    if (!apiKey) {
+      throw new Error('MiniMax API key not configured');
+    }
+
+    const baseUrl = this.model.baseUrl || 'https://api.minimax.chat/v1';
+    const url = `${baseUrl}/text/chatcompletion_v2`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model.model,
+        messages: options.messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`MiniMax API error: ${error}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') {
+          yield { delta: '', done: true };
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content || '';
+          if (delta) {
+            yield { delta, done: false };
+          }
+        } catch {
+        }
+      }
+    }
+  }
+
+  calculateCost(_promptTokens: number, _completionTokens: number): number {
+    return 0;
+  }
+}
+
 export function createModelClient(model: AIModel): BaseModelClient {
   switch (model.provider) {
     case 'openai':
       return new OpenAIClient(model);
     case 'claude':
       return new ClaudeClient(model);
+    case 'zhipu':
+      return new ZhipuClient(model);
+    case 'minimax':
+      return new MiniMaxClient(model);
     default:
       throw new Error(`Unsupported model provider: ${model.provider}`);
   }

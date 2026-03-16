@@ -1,3 +1,12 @@
+weekday:
+  sunday: Sun
+  monday: Mon
+  tuesday: Tue
+  wednesday: Wed
+  thursday: Thu
+  friday: Fri
+  saturday: Sat
+
 buttons:
   pureAccountSettings: Account
   pureLoginOut: LoginOut
@@ -74,21 +83,33 @@ menus:
   pureHome: Home
   pureLogin: Login
   pureEmpty: Empty Page
+  pureDashboard: Dashboard
+  pureDashboardOverview: Overview
+  pureTasks: Tasks
+  pureTasksManagement: Task Management
+  pureContacts: Contacts
+  pureContactsManagement: Contact Management
   pureFinance: Finance
   pureFinanceRecord: Records
-  pureBudget: Budget
-  pureInvestment: Investment
+  pureFinanceBudget: Budget Management
+  pureFinanceInvestments: Investment Portfolio
   pureHealth: Health
-  pureWater: Water Intake
-  pureExercise: Exercise
+  pureHealthWater: Water Intake
+  pureHealthExercise: Exercise Tracking
   pureHealthGoals: Health Goals
   pureFashion: Fashion
-  pureWardrobe: Wardrobe
-  pureOutfit: Outfit
+  pureFashionWardrobe: Wardrobe Management
+  pureFashionOutfits: Outfit Recommendations
   pureKnowledge: Knowledge
-  pureDailyPush: Daily Push
+  pureKnowledgeDaily: Daily Knowledge
   pureNews: News
-  pureNewsAggregation: News Aggregation
+  pureNewsAggregate: News Aggregation
+  pureNewsRecommendations: News Recommendations
+  pureSchedule: Schedule
+  pureScheduleManagement: Schedule Management
+  pureAiChat: AI Assistant
+  pureAiChatChat: AI Chat
+  pureAiConfig: AI Config
   pureSysManagement: System Manage
   pureUser: User Manage
   pureRole: Role Manage
@@ -126,6 +147,14 @@ login:
   pureQRCodeLogin: QRCode Login
   pureRegister: Register
   pureWeChatLogin: WeChat Login
+  zhCN: 简体中文
+  enUS: English
+  theme: Theme
+  i18n: Language
+  phoneLogin: Phone Login
+  qrCodeLogin: QR Code Login
+  regist: Register
+  forgetPassword: Forget Password
   pureAlipayLogin: Alipay Login
   purePhone: Phone
   pureSmsVerifyCode: SMS VerifyCode
@@ -168,3 +197,184 @@ tableBar:
   pureReset: Reset
   pureExitFullScreen: ExitFullScreen
   pureFullScreen: FullScreen
+
+common:
+  save: Save
+
+aiConfigPage:
+  title: AI Config
+  provider: Provider
+  providerOpenai: OpenAI
+  providerClaude: Claude (Anthropic)
+  providerZhipu: Zhipu AI
+  providerMiniMax: MiniMax
+  providerCustom: Custom
+  customModel: Custom Model
+  selectProvider: Select Provider
+  apiKey: API Key
+  apiKeyPlaceholder: Enter API Key
+  model: Model
+  selectModel: Select Model
+  baseUrl: Custom URL
+  baseUrlPlaceholder: Enter Custom API URL
+  testConnection: Test Connection
+  saveSuccess: Saved Successfully
+  saveFailed: Save Failed
+  testSuccess: Connection Successful
+  testFailed: Connection Failed
+  apiKeyRequired: Please Enter API Key
+  nluSettings: Natural Language Settings
+  nlEnabled: Enable Natural Language
+  nlExamples: Examples
+  nlExample1: '"I drank 3 glasses of water" - Log water'
+  nlExample2: '"I ran for 30 minutes" - Log exercise'
+  nlExample3: '"Spent 100 today" - Log expense'
+
+aiChat:
+  title: AI Chat
+  welcomeMessage: "Hello! I'm your AI assistant. You can chat with me or use natural language to log health data, like:\n- I drank 3 glasses of water\n- I ran for 30 minutes\n- Spent 100 today"
+  placeholder: Try saying "I drank 3 glasses of water"
+  placeholderDisabled: Enter message...
+  send: Send
+  clear: Clear
+  thinking: Thinking...
+  errorMessage: Sorry, something went wrong. Please try again later.
+  fallbackMessage: "Sorry, I didn't understand. You can try:\n- I drank 3 glasses of water\n- I ran for 30 minutes"
+  requestError: Sorry, I couldn't process your request.
+  nluTip: Try saying "I drank 3 glasses of water" or "I ran for 30 minutes" to automatically log health data
+
+# Page Content Translations
+pageContent:
+  # Health
+  healthWater: Water Intake
+  healthWaterDesc: Track your daily water consumption
+  healthWaterInDev: Water intake feature under development...
+
+  healthExercise: Exercise Tracking
+  healthExerciseDesc: Record your exercise data
+  healthExerciseInDev: Exercise tracking feature under development...
+
+  healthGoals: Health Goals
+  healthGoalsDesc: Set and track your health goals
+  healthGoalsInDev: Health goals feature under development...
+
+  # Finance
+  financeRecords: Income & Expense Records
+  financeRecordsDesc: Manage your income and expense records
+  financeRecordsInDev: Income & expense records feature under development...
+
+  financeBudget: Budget Management
+  financeBudgetDesc: Set and track your budget
+  financeBudgetInDev: Budget management feature under development...
+
+  financeInvestments: Investment Portfolio
+  financeInvestmentsDesc: Manage your investment assets
+  financeInvestmentsInDev: Investment portfolio feature under development...
+
+  # Fashion
+  fashionWardrobe: Wardrobe Management
+  fashionWardrobeDesc: Manage your clothing inventory
+  fashionWardrobeInDev: Wardrobe management feature under development...
+
+  fashionOutfits: Outfit Recommendations
+  fashionOutfitsDesc: AI-powered outfit suggestions
+  fashionOutfitsInDev: Outfit recommendations feature under development...
+
+  # Knowledge
+  knowledgeDaily: Daily Knowledge
+  knowledgeDailyDesc: Daily knowledge推送
+  knowledgeDailyInDev: Daily knowledge feature under development...
+
+  # News
+  newsAggregate: News Aggregation
+  newsAggregateDesc: Smart news aggregation and recommendations
+  newsAggregateInDev: News aggregation feature under development...
+
+  newsRecommendations: Personalized Recommendations
+  newsRecommendationsDesc: Personalized news recommendations
+  newsRecommendationsInDev: News recommendations feature under development...
+
+  # Tasks
+  tasksManagement: Task Management
+  tasksManagementDesc: Manage your tasks and todos
+  tasksManagementInDev: Task management feature under development...
+
+  # Contacts
+  contactsManagement: Contact Management
+  contactsManagementDesc: Manage your contacts
+  contactsManagementInDev: Contact management feature under development...
+
+  # Schedule
+  scheduleManagement: Schedule Management
+  scheduleManagementDesc: Manage your schedule
+  scheduleManagementInDev: Schedule management feature under development...
+
+  # Dashboard
+  dashboardOverview: Dashboard Overview
+  dashboardWelcome: Welcome to your personal AI assistant
+
+# Welcome Page
+welcome:
+  lastWeek: Last Week
+  thisWeek: This Week
+  todayExpense: Today's Expense
+  waterIntake: Water Intake
+  todoTasks: Todo Tasks
+  healthScore: Health Score
+  unitYuan: Yuan
+  unitCup: cups
+  unitItem: items
+  unitPoint: points
+  analysisOverview: Analysis Overview
+  resolutionProbability: Resolution Probability
+  dataStatistics: Data Statistics
+  latestNews: Latest News
+  noData: No Data
+  viewDetails: "View details for order {id}"
+  orderNumber: Order
+  requiredNumber: Required
+  questionCount: Questions
+  resolveCount: Resolved
+  userSatisfaction: Satisfaction
+  statisticsDate: Date
+  operation: Action
+  newIssues: "Added {required} issues, {resolved} resolved"
+
+error:
+  pageNotFound: Sorry, the page you visited does not exist
+  backHome: Back to Home
+  noPermission: You do not have permission to access this page
+  serverError: Server error, please try again later
+
+about:
+  platformInfo: Platform Info
+  prodDeps: Production Dependencies
+  devDeps: Development Dependencies
+  version: Version
+  buildTime: Build Time
+  nodeVersion: Node Version
+  pnpmVersion: PNPM Version
+  fullCode: Full Version
+  fullCodeLink: Full Code Link
+  thinCode: Thin Version
+  thinCodeLink: Thin Code Link
+  docs: Documentation
+  docsLink: Docs Link
+  preview: Preview
+  previewLink: Preview Link
+
+result:
+  successPage: Success Page
+  failPage: Fail Page
+  codeLocation: Code Location
+  submitSuccess: Submit Success
+  submitFail: Submit Failed
+  successDesc: The submission result page is used to feedback a series of operation task processing results.
+  failDesc: Please check and modify the following information before resubmitting.
+  backToList: Back to List
+  viewProject: View Project
+  print: Print
+  backToModify: Back to Modify
+  projectId: Project ID
+  owner: Owner
+  effectiveTime: Effective Time
